@@ -1,6 +1,14 @@
-# vite_react_shadcn_ts
+# 127School
 
 A web application built with Vite, React, TypeScript, and TailwindCSS, leveraging Shadcn UI components.
+
+## Live Demo
+
+[Link to your live project here](https://247-school.netlify.app/)
+
+## Screenshot
+
+![Screenshot of the project](https://ibb.co/nMpPrKSg)
 
 ## Technologies Used
 
