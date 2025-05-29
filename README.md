@@ -4,11 +4,11 @@ A web application built with Vite, React, TypeScript, and TailwindCSS, leveragin
 
 ## Live Demo
 
-[Link to your live project here](https://247-school.netlify.app/)
+[Live link of the project here](https://247-school.netlify.app/)
 
 ## Screenshot
 
-![Screenshot of the project](https://ibb.co/nMpPrKSg)
+![Screenshot of the project](public/assets/screenshot.jpeg)
 
 ## Technologies Used
 
