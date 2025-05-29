@@ -1,0 +1,157 @@
+import { useState } from 'react';
+import { Menu, X, Star, Trophy, User, Home, BookOpen, BarChart3, Brain } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+
+const Header = () => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const navItems = [
+    { href: "/", label: "Home", icon: Home },
+    { href: "/subjects", label: "Subjects", icon: BookOpen },
+    { href: "/dashboard", label: "Dashboard", icon: BarChart3 },
+    { href: "/quizzes", label: "Quizzes", icon: Brain },
+  ];
+
+  const isActive = (href: string) => {
+    if (href === "/") return location.pathname === "/";
+    return location.pathname.includes(href.replace("#", ""));
+  };
+
+  const handleSubjectsClick = (e: React.MouseEvent) => {
+    if (location.pathname === "/") {
+      e.preventDefault();
+      const subjectsSection = document.getElementById('subjects');
+      if (subjectsSection) {
+        subjectsSection.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  };
+
+  const handleQuizzesClick = (e: React.MouseEvent) => {
+    if (location.pathname === "/") {
+      e.preventDefault();
+      const quizzesSection = document.getElementById('quizzes');
+      if (quizzesSection) {
+        quizzesSection.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  };
+
+  const handleProfileClick = () => {
+    navigate('/dashboard');
+    setIsMenuOpen(false);
+  };
+
+  return (
+    <header className="bg-white/95 backdrop-blur-md border-b-2 border-eduplay-purple/20 sticky top-0 z-50 shadow-lg">
+      <div className="container mx-auto px-4 py-3 lg:py-4">
+        <div className="flex items-center justify-between">
+          {/* Logo */}
+          <Link to="/" className="flex items-center space-x-2 animate-scale-in">
+            <img 
+              src="/assets/logo-2.png" 
+              alt="247School Logo"
+              className="h-8 lg:h-10 animate-bounce-gentle"
+            />
+          </Link>
+
+          {/* Desktop Navigation */}
+          <nav className="hidden lg:flex items-center space-x-6">
+            {navItems.map((item, index) => (
+              <Link
+                key={item.href}
+                to={item.href}
+                onClick={item.label === "Subjects" ? handleSubjectsClick : item.label === "Quizzes" ? handleQuizzesClick : undefined}
+                className={`text-lg font-semibold transition-all duration-300 hover:scale-105 animate-fade-in flex items-center space-x-1 px-3 py-2 rounded-lg ${
+                  isActive(item.href)
+                    ? 'text-eduplay-purple bg-eduplay-purple/10'
+                    : 'text-gray-700 hover:text-eduplay-purple hover:bg-eduplay-purple/5'
+                }`}
+                style={{ animationDelay: `${(index + 1) * 100}ms` }}
+              >
+                <item.icon className="w-4 h-4" />
+                <span>{item.label}</span>
+              </Link>
+            ))}
+          </nav>
+
+          {/* User Actions - Desktop */}
+          <div className="hidden lg:flex items-center space-x-4 animate-fade-in delay-700">
+            <div className="flex items-center bg-eduplay-yellow/20 px-3 py-2 rounded-full animate-bounce-gentle cursor-pointer">
+              <Trophy className="w-5 h-5 text-eduplay-orange mr-2 animate-pulse" />
+              <span className="font-bold text-eduplay-orange">1,250 ⭐</span>
+            </div>
+            <Button 
+              onClick={handleProfileClick}
+              className="bg-gradient-to-r from-eduplay-green to-eduplay-blue hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+            >
+              <User className="w-5 h-5 mr-2" />
+              Profile
+            </Button>
+          </div>
+
+          {/* Mobile Menu Button */}
+          <button
+            className="lg:hidden p-2 rounded-lg bg-eduplay-purple/10 hover:bg-eduplay-purple/20 transition-all duration-300 hover:scale-110"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            aria-label="Toggle mobile menu"
+          >
+            {isMenuOpen ? (
+              <X className="w-6 h-6 text-eduplay-purple animate-spin" />
+            ) : (
+              <Menu className="w-6 h-6 text-eduplay-purple animate-pulse" />
+            )}
+          </button>
+        </div>
+
+        {/* Mobile Menu */}
+        {isMenuOpen && (
+          <div className="lg:hidden mt-4 p-4 bg-white rounded-2xl playful-shadow animate-scale-in border border-eduplay-purple/10">
+            <nav className="flex flex-col space-y-1">
+              {navItems.map((item, index) => (
+                <Link
+                  key={item.href}
+                  to={item.href}
+                  onClick={(e) => {
+                    if (item.label === "Subjects") handleSubjectsClick(e);
+                    if (item.label === "Quizzes") handleQuizzesClick(e);
+                    setIsMenuOpen(false);
+                  }}
+                  className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-lg font-semibold transition-all duration-300 animate-fade-in ${
+                    isActive(item.href)
+                      ? 'text-eduplay-purple bg-eduplay-purple/10'
+                      : 'text-gray-700 hover:text-eduplay-purple hover:bg-eduplay-purple/5'
+                  }`}
+                  style={{ animationDelay: `${index * 100}ms` }}
+                >
+                  <item.icon className="w-5 h-5" />
+                  <span>{item.label}</span>
+                </Link>
+              ))}
+              
+              {/* Mobile User Actions */}
+              <div className="pt-4 mt-4 border-t border-gray-200 animate-fade-in delay-500 space-y-3">
+                <div className="flex items-center justify-center bg-eduplay-yellow/20 px-4 py-3 rounded-lg cursor-pointer">
+                  <Trophy className="w-5 h-5 text-eduplay-orange mr-2 animate-wiggle" />
+                  <span className="font-bold text-eduplay-orange text-lg">1,250 ⭐</span>
+                </div>
+                <Button 
+                  className="w-full bg-gradient-to-r from-eduplay-green to-eduplay-blue hover:scale-105 transition-all duration-300 py-3"
+                  onClick={handleProfileClick}
+                >
+                  <User className="w-5 h-5 mr-2" />
+                  Profile
+                </Button>
+              </div>
+            </nav>
+          </div>
+        )}
+      </div>
+    </header>
+  );
+};
+
+export default Header;
