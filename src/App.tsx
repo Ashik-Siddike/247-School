@@ -7,6 +7,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import Teams from "./pages/Teams";
+import ClassSelection from "./pages/ClassSelection";
 import MathLessons from "./pages/MathLessons";
 import EnglishLessons from "./pages/EnglishLessons";
 import BanglaLessons from "./pages/BanglaLessons";
@@ -28,6 +30,8 @@ const App = () => (
         <Layout>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/teams" element={<Teams />} />
+            <Route path="/class/:standard" element={<ClassSelection />} />
             <Route path="/lessons/math" element={<MathLessons />} />
             <Route path="/lessons/english" element={<EnglishLessons />} />
             <Route path="/lessons/bangla" element={<BanglaLessons />} />

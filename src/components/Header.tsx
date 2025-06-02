@@ -1,7 +1,14 @@
+
 import { useState } from 'react';
-import { Menu, X, Star, Trophy, User, Home, BookOpen, BarChart3, Brain } from 'lucide-react';
+import { Menu, X, Star, Trophy, User, Home, BookOpen, BarChart3, Brain, GraduationCap, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -13,6 +20,11 @@ const Header = () => {
     { href: "/subjects", label: "Subjects", icon: BookOpen },
     { href: "/dashboard", label: "Dashboard", icon: BarChart3 },
     { href: "/quizzes", label: "Quizzes", icon: Brain },
+  ];
+
+  const standards = [
+    '1st Standard', '2nd Standard', '3rd Standard', '4th Standard', '5th Standard',
+    '6th Standard', '7th Standard', '8th Standard', '9th Standard', '10th Standard'
   ];
 
   const isActive = (href: string) => {
@@ -43,6 +55,11 @@ const Header = () => {
   const handleProfileClick = () => {
     navigate('/dashboard');
     setIsMenuOpen(false);
+  };
+
+  const handleStandardSelect = (standard: string) => {
+    const standardNumber = standard.split(' ')[0];
+    navigate(`/class/${standardNumber}`);
   };
 
   return (
@@ -76,6 +93,39 @@ const Header = () => {
                 <span>{item.label}</span>
               </Link>
             ))}
+            
+            {/* Classes Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="text-lg font-semibold transition-all duration-300 hover:scale-105 flex items-center space-x-1 px-3 py-2 rounded-lg text-gray-700 hover:text-eduplay-purple hover:bg-eduplay-purple/5"
+                >
+                  <GraduationCap className="w-4 h-4" />
+                  <span>Classes</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-48 bg-white border border-gray-200 shadow-lg">
+                {standards.map((standard) => (
+                  <DropdownMenuItem
+                    key={standard}
+                    onClick={() => handleStandardSelect(standard)}
+                    className="cursor-pointer hover:bg-eduplay-purple/10"
+                  >
+                    {standard}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Teams Button */}
+            <Link
+              to="/teams"
+              className="text-lg font-semibold transition-all duration-300 hover:scale-105 animate-fade-in flex items-center space-x-1 px-3 py-2 rounded-lg text-gray-700 hover:text-eduplay-purple hover:bg-eduplay-purple/5"
+            >
+              <Users className="w-4 h-4" />
+              <span>Teams</span>
+            </Link>
           </nav>
 
           {/* User Actions - Desktop */}
@@ -131,6 +181,41 @@ const Header = () => {
                   <span>{item.label}</span>
                 </Link>
               ))}
+              
+              {/* Mobile Classes Section */}
+              <div className="pt-2 border-t border-gray-200 mt-2">
+                <div className="flex items-center space-x-3 px-4 py-2 text-lg font-semibold text-gray-700">
+                  <GraduationCap className="w-5 h-5" />
+                  <span>Classes</span>
+                </div>
+                <div className="pl-8 space-y-1">
+                  {standards.slice(0, 5).map((standard) => (
+                    <button
+                      key={standard}
+                      onClick={() => {
+                        handleStandardSelect(standard);
+                        setIsMenuOpen(false);
+                      }}
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-600 hover:text-eduplay-purple hover:bg-eduplay-purple/5 rounded"
+                    >
+                      {standard}
+                    </button>
+                  ))}
+                  <button className="block w-full text-left px-4 py-2 text-sm text-gray-500">
+                    ... and more
+                  </button>
+                </div>
+              </div>
+
+              {/* Mobile Teams */}
+              <Link
+                to="/teams"
+                onClick={() => setIsMenuOpen(false)}
+                className="flex items-center space-x-3 px-4 py-3 rounded-lg text-lg font-semibold text-gray-700 hover:text-eduplay-purple hover:bg-eduplay-purple/5"
+              >
+                <Users className="w-5 h-5" />
+                <span>Teams</span>
+              </Link>
               
               {/* Mobile User Actions */}
               <div className="pt-4 mt-4 border-t border-gray-200 animate-fade-in delay-500 space-y-3">
