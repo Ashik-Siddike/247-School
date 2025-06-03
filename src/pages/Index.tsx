@@ -1,4 +1,5 @@
-
+import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import HeroSection from '@/components/HeroSection';
 import ClassSelector from '@/components/ClassSelector';
 import SubjectsSection from '@/components/SubjectsSection';
@@ -6,6 +7,17 @@ import FeaturesSection from '@/components/FeaturesSection';
 import DashboardPreview from '@/components/DashboardPreview';
 
 const Index = () => {
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.state?.scrollToSubjects) {
+      const subjectsSection = document.getElementById('subjects');
+      if (subjectsSection) {
+        subjectsSection.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  }, [location]);
+
   return (
     <div className="min-h-screen">
       <HeroSection />

@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Menu, X, Star, Trophy, User, Home, BookOpen, BarChart3, Brain, GraduationCap, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -32,12 +31,14 @@ const Header = () => {
   };
 
   const handleSubjectsClick = (e: React.MouseEvent) => {
+    e.preventDefault();
     if (location.pathname === "/") {
-      e.preventDefault();
       const subjectsSection = document.getElementById('subjects');
       if (subjectsSection) {
         subjectsSection.scrollIntoView({ behavior: 'smooth' });
       }
+    } else {
+      navigate('/', { state: { scrollToSubjects: true } });
     }
   };
 
@@ -90,16 +91,29 @@ const Header = () => {
                   <span>Classes</span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-48 bg-white border border-gray-200 shadow-lg">
-                {standards.map((standard) => (
-                  <DropdownMenuItem
-                    key={standard}
-                    onClick={() => handleStandardSelect(standard)}
-                    className="cursor-pointer hover:bg-eduplay-purple/10"
-                  >
-                    {standard}
-                  </DropdownMenuItem>
-                ))}
+              <DropdownMenuContent 
+                className="w-56 bg-white/95 backdrop-blur-md border border-eduplay-purple/20 shadow-xl rounded-xl p-2 animate-in slide-in-from-top-2"
+                sideOffset={8}
+              >
+                <div className="grid gap-1.5">
+                  {standards.map((standard, index) => (
+                    <DropdownMenuItem
+                      key={standard}
+                      onClick={() => handleStandardSelect(standard)}
+                      className="flex items-center space-x-3 px-3 py-2.5 rounded-lg cursor-pointer transition-all duration-200
+                        hover:bg-gradient-to-r hover:from-eduplay-purple/10 hover:to-eduplay-blue/10
+                        hover:text-eduplay-purple hover:scale-[1.02] active:scale-[0.98]
+                        data-[highlighted]:bg-eduplay-purple/5"
+                    >
+                      <div className="flex items-center justify-center w-7 h-7 rounded-full bg-gradient-to-br from-eduplay-purple/10 to-eduplay-blue/10">
+                        <span className="text-sm font-semibold text-eduplay-purple">
+                          {index + 1}
+                        </span>
+                      </div>
+                      <span className="text-base font-medium">{standard}</span>
+                    </DropdownMenuItem>
+                  ))}
+                </div>
               </DropdownMenuContent>
             </DropdownMenu>
 
