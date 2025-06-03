@@ -19,7 +19,6 @@ const Header = () => {
     { href: "/", label: "Home", icon: Home },
     { href: "/subjects", label: "Subjects", icon: BookOpen },
     { href: "/dashboard", label: "Dashboard", icon: BarChart3 },
-    { href: "/quizzes", label: "Quizzes", icon: Brain },
   ];
 
   const standards = [
@@ -38,16 +37,6 @@ const Header = () => {
       const subjectsSection = document.getElementById('subjects');
       if (subjectsSection) {
         subjectsSection.scrollIntoView({ behavior: 'smooth' });
-      }
-    }
-  };
-
-  const handleQuizzesClick = (e: React.MouseEvent) => {
-    if (location.pathname === "/") {
-      e.preventDefault();
-      const quizzesSection = document.getElementById('quizzes');
-      if (quizzesSection) {
-        quizzesSection.scrollIntoView({ behavior: 'smooth' });
       }
     }
   };
@@ -77,22 +66,18 @@ const Header = () => {
 
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center space-x-6">
-            {navItems.map((item, index) => (
-              <Link
-                key={item.href}
-                to={item.href}
-                onClick={item.label === "Subjects" ? handleSubjectsClick : item.label === "Quizzes" ? handleQuizzesClick : undefined}
-                className={`text-lg font-semibold transition-all duration-300 hover:scale-105 animate-fade-in flex items-center space-x-1 px-3 py-2 rounded-lg ${
-                  isActive(item.href)
-                    ? 'text-eduplay-purple bg-eduplay-purple/10'
-                    : 'text-gray-700 hover:text-eduplay-purple hover:bg-eduplay-purple/5'
-                }`}
-                style={{ animationDelay: `${(index + 1) * 100}ms` }}
-              >
-                <item.icon className="w-4 h-4" />
-                <span>{item.label}</span>
-              </Link>
-            ))}
+            {/* Home */}
+            <Link
+              to="/"
+              className={`text-lg font-semibold transition-all duration-300 hover:scale-105 animate-fade-in flex items-center space-x-1 px-3 py-2 rounded-lg ${
+                isActive("/")
+                  ? 'text-eduplay-purple bg-eduplay-purple/10'
+                  : 'text-gray-700 hover:text-eduplay-purple hover:bg-eduplay-purple/5'
+              }`}
+            >
+              <Home className="w-4 h-4" />
+              <span>Home</span>
+            </Link>
             
             {/* Classes Dropdown */}
             <DropdownMenu>
@@ -117,6 +102,33 @@ const Header = () => {
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
+
+            {/* Subjects */}
+            <Link
+              to="/subjects"
+              onClick={handleSubjectsClick}
+              className={`text-lg font-semibold transition-all duration-300 hover:scale-105 animate-fade-in flex items-center space-x-1 px-3 py-2 rounded-lg ${
+                isActive("/subjects")
+                  ? 'text-eduplay-purple bg-eduplay-purple/10'
+                  : 'text-gray-700 hover:text-eduplay-purple hover:bg-eduplay-purple/5'
+              }`}
+            >
+              <BookOpen className="w-4 h-4" />
+              <span>Subjects</span>
+            </Link>
+
+            {/* Dashboard */}
+            <Link
+              to="/dashboard"
+              className={`text-lg font-semibold transition-all duration-300 hover:scale-105 animate-fade-in flex items-center space-x-1 px-3 py-2 rounded-lg ${
+                isActive("/dashboard")
+                  ? 'text-eduplay-purple bg-eduplay-purple/10'
+                  : 'text-gray-700 hover:text-eduplay-purple hover:bg-eduplay-purple/5'
+              }`}
+            >
+              <BarChart3 className="w-4 h-4" />
+              <span>Dashboard</span>
+            </Link>
 
             {/* Teams Button */}
             <Link
@@ -161,26 +173,19 @@ const Header = () => {
         {isMenuOpen && (
           <div className="lg:hidden mt-4 p-4 bg-white rounded-2xl playful-shadow animate-scale-in border border-eduplay-purple/10">
             <nav className="flex flex-col space-y-1">
-              {navItems.map((item, index) => (
-                <Link
-                  key={item.href}
-                  to={item.href}
-                  onClick={(e) => {
-                    if (item.label === "Subjects") handleSubjectsClick(e);
-                    if (item.label === "Quizzes") handleQuizzesClick(e);
-                    setIsMenuOpen(false);
-                  }}
-                  className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-lg font-semibold transition-all duration-300 animate-fade-in ${
-                    isActive(item.href)
-                      ? 'text-eduplay-purple bg-eduplay-purple/10'
-                      : 'text-gray-700 hover:text-eduplay-purple hover:bg-eduplay-purple/5'
-                  }`}
-                  style={{ animationDelay: `${index * 100}ms` }}
-                >
-                  <item.icon className="w-5 h-5" />
-                  <span>{item.label}</span>
-                </Link>
-              ))}
+              {/* Home */}
+              <Link
+                to="/"
+                onClick={() => setIsMenuOpen(false)}
+                className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-lg font-semibold transition-all duration-300 animate-fade-in ${
+                  isActive("/")
+                    ? 'text-eduplay-purple bg-eduplay-purple/10'
+                    : 'text-gray-700 hover:text-eduplay-purple hover:bg-eduplay-purple/5'
+                }`}
+              >
+                <Home className="w-5 h-5" />
+                <span>Home</span>
+              </Link>
               
               {/* Mobile Classes Section */}
               <div className="pt-2 border-t border-gray-200 mt-2">
@@ -206,6 +211,37 @@ const Header = () => {
                   </button>
                 </div>
               </div>
+
+              {/* Subjects */}
+              <Link
+                to="/subjects"
+                onClick={(e) => {
+                  handleSubjectsClick(e);
+                  setIsMenuOpen(false);
+                }}
+                className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-lg font-semibold transition-all duration-300 animate-fade-in ${
+                  isActive("/subjects")
+                    ? 'text-eduplay-purple bg-eduplay-purple/10'
+                    : 'text-gray-700 hover:text-eduplay-purple hover:bg-eduplay-purple/5'
+                }`}
+              >
+                <BookOpen className="w-5 h-5" />
+                <span>Subjects</span>
+              </Link>
+
+              {/* Dashboard */}
+              <Link
+                to="/dashboard"
+                onClick={() => setIsMenuOpen(false)}
+                className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-lg font-semibold transition-all duration-300 animate-fade-in ${
+                  isActive("/dashboard")
+                    ? 'text-eduplay-purple bg-eduplay-purple/10'
+                    : 'text-gray-700 hover:text-eduplay-purple hover:bg-eduplay-purple/5'
+                }`}
+              >
+                <BarChart3 className="w-5 h-5" />
+                <span>Dashboard</span>
+              </Link>
 
               {/* Mobile Teams */}
               <Link

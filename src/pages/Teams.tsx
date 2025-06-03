@@ -5,48 +5,64 @@ import { Mail, Linkedin, Github } from 'lucide-react';
 const teamMembers = [
   {
     id: 1,
-    name: "Dr. Sarah Johnson",
-    position: "Head of Curriculum",
-    bio: "Former university professor with 15+ years of experience in educational technology and curriculum development.",
-    photo: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=300&h=300&fit=crop&crop=face",
-    email: "sarah@247school.com",
-    linkedin: "sarah-johnson-edu"
+    name: "Dr. Sujit Biswas",
+    position: "CEO and Founder",
+    bio: "Visionary leader dedicated to transforming education through innovative technology and creating accessible learning opportunities for all children.",
+    photo: "https://i.ibb.co/272yPtrH/Whats-App-Image-2025-06-03-at-16-12-43-894c9023.jpg",
+    email: "sujitbiswas@247school.org",
+    location: "London, E6 2BN",
+    github: "sujitedu",
+    linkedin: "sujitedu",
+    facebook: "engr.sujitbiswas",
+    website: "https://www.sujitbiswas.info/"
   },
   {
     id: 2,
-    name: "Mark Chen",
-    position: "Lead Developer",
-    bio: "Full-stack developer passionate about creating engaging educational experiences through innovative technology.",
-    photo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop&crop=face",
-    email: "mark@247school.com",
-    github: "markchen-dev"
+    name: "Md. Ashik Siddike",
+    position: "Full Stack Developer, Graphic Designer",
+    bio: "Passionate full-stack developer and creative designer, bringing educational visions to life through code and beautiful user experiences.",
+    photo: "https://i.ibb.co/PZk73L3k/1746152921307.jpg",
+    email: "ashik@247school.org",
+    location: "Magura, Khulna, Bangladesh",
+    github: "Ashik-Siddike",
+    linkedin: "ashik-siddike",
+    facebook: "ashik.siddike.official"
   },
   {
     id: 3,
-    name: "Emily Rodriguez",
-    position: "UX/UI Designer",
-    bio: "Creative designer specializing in child-friendly interfaces and interactive learning experiences.",
-    photo: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=300&h=300&fit=crop&crop=face",
-    email: "emily@247school.com",
-    linkedin: "emily-rodriguez-design"
+    name: "Sagar Biswas",
+    position: "Curriculum Developer",
+    bio: "Educational content specialist focused on creating engaging and age-appropriate learning materials that make complex topics accessible to young minds.",
+    photo: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=300&h=300&fit=crop&crop=face",
+    email: "sagarbiswas@247school.org",
+    altEmail: "sagarbiswas.jo@gmail.com",
+    location: "Dharmotala, Jashore, Bangladesh",
+    facebook: "sagarbiswas.jo"
   },
   {
     id: 4,
-    name: "David Kumar",
-    position: "Content Specialist",
-    bio: "Educational content creator with expertise in making complex topics accessible and fun for young learners.",
-    photo: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=300&h=300&fit=crop&crop=face",
-    email: "david@247school.com",
-    linkedin: "david-kumar-edu"
+    name: "Aronyo Mojumder",
+    position: "Research Assistant",
+    bio: "Dedicated researcher exploring innovative educational methodologies and technologies to enhance the learning experience for children.",
+    photo: "https://i.ibb.co/zV52VC5h/Whats-App-Image-2025-06-03-at-16-12-28-ff0ac258.jpg",
+    email: "aronyo@technoheaven.org",
+    location: "Jashore, Khulna, Bangladesh",
+    github: "aronyo24",
+    linkedin: "aronyo-mojumder",
+    facebook: "share/18yctJdieH/",
+    website: "https://aronyo24.github.io/aronyomojumder/"
   },
   {
     id: 5,
-    name: "Lisa Thompson",
-    position: "Quality Assurance Lead",
-    bio: "Former teacher turned QA specialist, ensuring every lesson meets the highest educational standards.",
-    photo: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=300&h=300&fit=crop&crop=face",
-    email: "lisa@247school.com",
-    linkedin: "lisa-thompson-qa"
+    name: "SK Asaduzzaman",
+    position: "Research Assistant / Support Engineer",
+    bio: "Research-focused support engineer ensuring smooth operations and contributing to educational research initiatives.",
+    photo: "https://i.ibb.co/TDST1R6K/Whats-App-Image-2025-06-03-at-16-14-07-df8d28d8.jpg",
+    email: "asaduzzaman@247school.org",
+    location: "Jashore, Khulna, Bangladesh",
+    github: "skasaduzzamanabc",
+    linkedin: "sk-asaduzzaman-sourov-1aaaaa2a9/",
+    facebook: "skasaduzzamanabc"
   }
 ];
 
