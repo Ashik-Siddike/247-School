@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Mail, Linkedin, Github } from 'lucide-react';
 
@@ -8,7 +7,7 @@ const teamMembers = [
     name: "Dr. Sujit Biswas",
     position: "CEO and Founder",
     bio: "Visionary leader dedicated to transforming education through innovative technology and creating accessible learning opportunities for all children.",
-    photo: "https://i.ibb.co/272yPtrH/Whats-App-Image-2025-06-03-at-16-12-43-894c9023.jpg",
+    photo: "/assets/shujit.jpg",
     email: "sujitbiswas@247school.org",
     location: "London, E6 2BN",
     github: "sujitedu",
@@ -19,9 +18,9 @@ const teamMembers = [
   {
     id: 2,
     name: "Md. Ashik Siddike",
-    position: "Full Stack Developer, Graphic Designer",
+    position: "Full Stack Developer & Graphic Designer",
     bio: "Passionate full-stack developer and creative designer, bringing educational visions to life through code and beautiful user experiences.",
-    photo: "https://i.ibb.co/PZk73L3k/1746152921307.jpg",
+    photo: "/assets/ashik.jpg",
     email: "ashik@247school.org",
     location: "Magura, Khulna, Bangladesh",
     github: "Ashik-Siddike",
@@ -33,7 +32,7 @@ const teamMembers = [
     name: "Sagar Biswas",
     position: "Curriculum Developer",
     bio: "Educational content specialist focused on creating engaging and age-appropriate learning materials that make complex topics accessible to young minds.",
-    photo: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=300&h=300&fit=crop&crop=face",
+    photo: "/assets/shagor.jpg",
     email: "sagarbiswas@247school.org",
     altEmail: "sagarbiswas.jo@gmail.com",
     location: "Dharmotala, Jashore, Bangladesh",
@@ -42,9 +41,9 @@ const teamMembers = [
   {
     id: 4,
     name: "Aronyo Mojumder",
-    position: "Research Assistant",
+    position: "Research Assistant / Support Engineer",
     bio: "Dedicated researcher exploring innovative educational methodologies and technologies to enhance the learning experience for children.",
-    photo: "https://i.ibb.co/zV52VC5h/Whats-App-Image-2025-06-03-at-16-12-28-ff0ac258.jpg",
+    photo: "/assets/Aronno.jpg",
     email: "aronyo@technoheaven.org",
     location: "Jashore, Khulna, Bangladesh",
     github: "aronyo24",
@@ -57,7 +56,7 @@ const teamMembers = [
     name: "SK Asaduzzaman",
     position: "Research Assistant / Support Engineer",
     bio: "Research-focused support engineer ensuring smooth operations and contributing to educational research initiatives.",
-    photo: "https://i.ibb.co/TDST1R6K/Whats-App-Image-2025-06-03-at-16-14-07-df8d28d8.jpg",
+    photo: "/assets/asad.jpg",
     email: "asaduzzaman@247school.org",
     location: "Jashore, Khulna, Bangladesh",
     github: "skasaduzzamanabc",
