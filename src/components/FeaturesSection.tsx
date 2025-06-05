@@ -61,12 +61,12 @@ const FeaturesSection = () => {
         <div className="text-center space-y-6 mb-16">
           <h2 className="text-4xl md:text-5xl font-bold">
             <span className="bg-gradient-to-r from-eduplay-purple via-eduplay-blue to-eduplay-green bg-clip-text text-transparent">
-              Why Kids Love EduPlay!
+              Why Kids Love <br />24/7 School!
             </span>
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
             We've designed every feature to make learning feel like playing! 
-            Here's what makes EduPlay special 🌈
+            Here's what makes 24/7 School special 🌈
           </p>
         </div>
 
