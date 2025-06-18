@@ -1,35 +1,9 @@
 import { useParams, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calculator, BookOpen, Beaker, Globe, ArrowRight, ChevronLeft } from 'lucide-react';
-
-const subjectsByClass = {
-  '1st': [
-    { id: 'basic-math', title: 'Basic Math', description: 'Numbers, counting, and simple addition!', icon: Calculator, emoji: '🔢' },
-    { id: 'english-basics', title: 'English Basics', description: 'Letters, words, and simple sentences!', icon: BookOpen, emoji: '📚' },
-    { id: 'bangla-basics', title: 'বাংলা বেসিক', description: 'বর্ণমালা এবং সহজ শব্দ!', icon: Globe, emoji: '🇧🇩' },
-  ],
-  '5th': [
-    { id: 'mathematics', title: 'Mathematics', description: 'Fractions, decimals, and geometry!', icon: Calculator, emoji: '🔢' },
-    { id: 'english', title: 'English', description: 'Grammar, comprehension, and writing!', icon: BookOpen, emoji: '📚' },
-    { id: 'bangla', title: 'বাংলা', description: 'ব্যাকরণ এবং রচনা!', icon: Globe, emoji: '🇧🇩' },
-    { id: 'science', title: 'Science', description: 'Plants, animals, and basic experiments!', icon: Beaker, emoji: '🔬' },
-  ],
-  '8th': [
-    { id: 'mathematics', title: 'Mathematics', description: 'Algebra, geometry, and statistics!', icon: Calculator, emoji: '🔢' },
-    { id: 'english', title: 'English Literature', description: 'Poetry, stories, and essay writing!', icon: BookOpen, emoji: '📚' },
-    { id: 'bangla', title: 'বাংলা সাহিত্য', description: 'কবিতা এবং গদ্য!', icon: Globe, emoji: '🇧🇩' },
-    { id: 'science', title: 'General Science', description: 'Physics, chemistry, and biology basics!', icon: Beaker, emoji: '🔬' },
-  ],
-  '10th': [
-    { id: 'mathematics', title: 'Mathematics', description: 'Advanced algebra, trigonometry, and calculus!', icon: Calculator, emoji: '🔢' },
-    { id: 'english', title: 'English', description: 'Advanced grammar and literature analysis!', icon: BookOpen, emoji: '📚' },
-    { id: 'bangla', title: 'বাংলা', description: 'উন্নত সাহিত্য এবং ব্যাকরণ!', icon: Globe, emoji: '🇧🇩' },
-    { id: 'physics', title: 'Physics', description: 'Mechanics, electricity, and magnetism!', icon: Beaker, emoji: '⚡' },
-    { id: 'chemistry', title: 'Chemistry', description: 'Organic and inorganic chemistry!', icon: Beaker, emoji: '🧪' },
-    { id: 'biology', title: 'Biology', description: 'Human body, genetics, and ecology!', icon: Beaker, emoji: '🧬' },
-  ]
-};
+import { supabase } from '../lib/supabaseClient';
 
 const subjectMap: Record<string, string> = {
   'basic-math': 'math',
@@ -42,11 +16,40 @@ const subjectMap: Record<string, string> = {
   // প্রয়োজনে আরও ম্যাপিং যোগ করুন
 };
 
+// ক্লাস নাম ম্যাপিং (route param -> grade name)
+const gradeNameMap: Record<string, string> = {
+  '1st': 'Grade 1',
+  '2nd': 'Grade 2',
+  '3rd': 'Grade 3',
+  '4th': 'Grade 4',
+  '5th': 'Grade 5',
+  'nursery': 'Nursery',
+};
+
 const ClassSelection = () => {
   const { standard } = useParams();
   const navigate = useNavigate();
-  
-  const subjects = subjectsByClass[standard as keyof typeof subjectsByClass] || subjectsByClass['5th'];
+  const [subjects, setSubjects] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchSubjects = async () => {
+      setLoading(true);
+      // route param থেকে grade name বের করুন
+      const gradeName = gradeNameMap[standard || ''] || (standard ? standard.charAt(0).toUpperCase() + standard.slice(1) : 'Grade 5');
+      // grade name দিয়ে grade id বের করুন
+      const { data: grades } = await supabase.from('grades').select('*').eq('name', gradeName).single();
+      if (grades && grades.id) {
+        const { data: subjectsData } = await supabase.from('subjects').select('*').eq('grade_id', grades.id);
+        setSubjects(subjectsData || []);
+      } else {
+        setSubjects([]);
+      }
+      setLoading(false);
+    };
+    fetchSubjects();
+  }, [standard]);
+
   const standardName = standard ? `${standard} Standard` : '5th Standard';
 
   const handleSubjectClick = (subjectId: string) => {
@@ -103,48 +106,53 @@ const ClassSelection = () => {
           </p>
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto">
-          {subjects.map((subject, index) => (
-            <Card
-              key={subject.id}
-              className={`${getColorForIndex(index)} border-0 playful-shadow subject-card cursor-pointer animate-fade-in hover:scale-105 transition-all duration-300`}
-              style={{ animationDelay: `${index * 150}ms` }}
-              onClick={() => handleSubjectClick(subject.id)}
-            >
-              <CardHeader className="text-center pb-4">
-                <div className="text-6xl mb-4 animate-bounce-gentle">{subject.emoji}</div>
-                <CardTitle className="text-xl lg:text-2xl font-bold text-gray-800 mb-2">
-                  {subject.title}
-                </CardTitle>
-                <p className="text-gray-600 text-sm lg:text-base">{subject.description}</p>
-              </CardHeader>
-              
-              <CardContent className="pt-0">
-                <Button 
-                  className={`w-full ${getButtonColorForIndex(index)} text-white hover:shadow-lg transform hover:scale-105 transition-all duration-300 text-base lg:text-lg py-3`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleSubjectClick(subject.id);
-                  }}
-                >
-                  Start Learning
-                  <ArrowRight className="w-4 h-4 ml-2 animate-pulse" />
-                </Button>
-                
-                <div className="mt-4 flex items-center justify-center space-x-4 text-sm text-gray-600">
-                  <span className="flex items-center">
-                    <span className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></span>
-                    Grade {standard}
-                  </span>
-                  <span className="flex items-center">
-                    <span className="w-2 h-2 bg-yellow-400 rounded-full mr-2 animate-pulse"></span>
-                    Interactive
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        {loading ? (
+          <div className="text-center text-lg">লোড হচ্ছে...</div>
+        ) : subjects.length === 0 ? (
+          <div className="text-center text-lg text-red-500">এই ক্লাসের জন্য কোনো বিষয় পাওয়া যায়নি।</div>
+        ) : (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto">
+            {subjects.map((subject, index) => (
+              <Card
+                key={subject.id}
+                className={`${getColorForIndex(index)} border-0 playful-shadow subject-card cursor-pointer animate-fade-in hover:scale-105 transition-all duration-300`}
+                style={{ animationDelay: `${index * 150}ms` }}
+                onClick={() => handleSubjectClick(subject.name.toLowerCase())}
+              >
+                <CardHeader className="text-center pb-4">
+                  <div className="text-6xl mb-4 animate-bounce-gentle">📚</div>
+                  <CardTitle className="text-xl lg:text-2xl font-bold text-gray-800 mb-2">
+                    {subject.name}
+                  </CardTitle>
+                  {/* সাবজেক্টে description ফিল্ড থাকলে দেখান */}
+                  {subject.description && <p className="text-gray-600 text-sm lg:text-base">{subject.description}</p>}
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <Button 
+                    className={`w-full ${getButtonColorForIndex(index)} text-white hover:shadow-lg transform hover:scale-105 transition-all duration-300 text-base lg:text-lg py-3`}
+                    onClick={e => {
+                      e.stopPropagation();
+                      handleSubjectClick(subject.name.toLowerCase());
+                    }}
+                  >
+                    Start Learning
+                    <ArrowRight className="w-4 h-4 ml-2 animate-pulse" />
+                  </Button>
+                  <div className="mt-4 flex items-center justify-center space-x-4 text-sm text-gray-600">
+                    <span className="flex items-center">
+                      <span className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></span>
+                      Grade {standard}
+                    </span>
+                    <span className="flex items-center">
+                      <span className="w-2 h-2 bg-yellow-400 rounded-full mr-2 animate-pulse"></span>
+                      Interactive
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
 
         <div className="text-center mt-12 lg:mt-16">
           <div className="bg-white rounded-2xl p-8 playful-shadow max-w-2xl mx-auto">
