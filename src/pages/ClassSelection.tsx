@@ -1,4 +1,3 @@
-
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -32,6 +31,17 @@ const subjectsByClass = {
   ]
 };
 
+const subjectMap: Record<string, string> = {
+  'basic-math': 'math',
+  'english-basics': 'english',
+  'bangla-basics': 'bangla',
+  'mathematics': 'math',
+  'english': 'english',
+  'bangla': 'bangla',
+  'science': 'science',
+  // প্রয়োজনে আরও ম্যাপিং যোগ করুন
+};
+
 const ClassSelection = () => {
   const { standard } = useParams();
   const navigate = useNavigate();
@@ -40,7 +50,8 @@ const ClassSelection = () => {
   const standardName = standard ? `${standard} Standard` : '5th Standard';
 
   const handleSubjectClick = (subjectId: string) => {
-    navigate(`/lessons/${subjectId}?class=${standard}`);
+    const mappedSubject = subjectMap[subjectId] || subjectId;
+    navigate(`/lessons/${mappedSubject}?class=${standard}`);
   };
 
   const getColorForIndex = (index: number) => {
