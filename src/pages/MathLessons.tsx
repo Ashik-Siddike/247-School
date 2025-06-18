@@ -1,8 +1,11 @@
 import ContentList from './ContentList';
+import { useLocation } from 'react-router-dom';
 
 const MathLessons = () => {
-  // এখানে ক্লাস ও সাবজেক্ট চাইলে প্রপ্স/স্টেট থেকে নিতে পারেন
-  return <ContentList subject="math" />;
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  const className = params.get('class');
+  return <ContentList subject="math" className={className || undefined} />;
 };
 
 export default MathLessons;

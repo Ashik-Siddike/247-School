@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
+import { getClassAndSubjectFromURL } from '../lib/utils';
 
 const funEmojis = ['📚', '🦄', '🌟', '🚀', '🎈', '🐥', '🍭', '🧸', '🦋'];
 
@@ -11,7 +12,20 @@ interface ContentItem {
   subject: string;
 }
 
-const ContentList: React.FC<{ className?: string; subject?: string }> = ({ className, subject }) => {
+const ContentList: React.FC<{ className?: string; subject?: string }> = (props) => {
+  const location = useLocation();
+  // Always extract from props or URL
+  const { className, subject } = {
+    className: props.className ?? getClassAndSubjectFromURL(location.search).className,
+    subject: props.subject ?? getClassAndSubjectFromURL(location.search).subject,
+  };
+
+  // DEV warning
+  if (process.env.NODE_ENV === 'development' && (!className || !subject)) {
+    // eslint-disable-next-line no-console
+    console.warn('ContentList: className এবং subject দুইটাই অবশ্যই লাগবে!');
+  }
+
   const [contents, setContents] = useState<ContentItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -37,7 +51,15 @@ const ContentList: React.FC<{ className?: string; subject?: string }> = ({ class
 
   if (loading) return <div className="text-center py-16 text-3xl animate-bounce">লোড হচ্ছে... 🦄</div>;
   if (error) return <div className="text-red-600 text-center py-16 text-2xl">{error} 😿</div>;
-  if (contents.length === 0) return <div className="text-center py-16 text-2xl">কোনো কনটেন্ট পাওয়া যায়নি 😕</div>;
+
+  // Frontend filter for class and subject
+  const filteredContents = contents.filter(content => {
+    let match = true;
+    if (className) match = match && content.class === className;
+    if (subject) match = match && content.subject === subject;
+    return match;
+  });
+  if (filteredContents.length === 0) return <div className="text-center py-16 text-2xl">কোনো কনটেন্ট পাওয়া যায়নি 😕</div>;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-pink-50 to-yellow-50 flex flex-col items-center py-8 px-2">
@@ -46,7 +68,7 @@ const ContentList: React.FC<{ className?: string; subject?: string }> = ({ class
           <span>কনটেন্ট লিস্ট</span> <span className="text-2xl">{funEmojis[contents.length % funEmojis.length]}</span>
         </h1>
         <ul className="grid gap-6 md:grid-cols-2">
-          {contents.map((content, idx) => (
+          {filteredContents.map((content, idx) => (
             <li key={content.id}>
               <Link
                 to={`/content/${content.id}`}
