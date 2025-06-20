@@ -1,10 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, Upload, Users, BookOpen, BarChart, Settings, Plus, Edit, Trash2, Eye } from 'lucide-react';
+import { Plus, Trash2, ArrowLeft, Settings } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { supabase } from '../lib/supabaseClient';
 import { useForm, FormProvider, useFieldArray, FieldErrors } from 'react-hook-form';
@@ -28,7 +25,6 @@ const contentSchema = z.object({
   content_type: z.enum(['youtube', 'image', 'video']),
   youtube_link: z.string().optional(),
   file_url: z.string().optional(),
-  pages: z.array(pageSchema).min(1, 'কমপক্ষে ১টি পেজ দিন'),
 });
 
 type PageForm = z.infer<typeof pageSchema>;
@@ -68,11 +64,9 @@ const AdminPanel = () => {
       content_type: 'youtube',
       youtube_link: '',
       file_url: '',
-      pages: [],
     },
   });
   const { register, handleSubmit, watch, setValue, reset, control, formState: { errors } } = methods;
-  const { fields, append, remove } = useFieldArray({ control, name: 'pages' });
 
   // Fetch grades & subjects
   useEffect(() => {
@@ -148,7 +142,7 @@ const AdminPanel = () => {
 
   // Add content
   const onSubmit = async (values: ContentForm) => {
-    const { grade_id, subject_id, pages, title, description, content_type, youtube_link, file_url } = values;
+    const { grade_id, subject_id, title, description, content_type, youtube_link, file_url } = values;
     const gradeName = grades.find(g => g.id === grade_id)?.name || '';
     const subjectName = (filteredSubjects.find(s => s.id === subject_id)?.name || '').toLowerCase();
     const classValue = classMap[gradeName] || gradeName;
@@ -156,7 +150,7 @@ const AdminPanel = () => {
       {
         class: classValue,
         subject: subjectName,
-        pages,
+        pages: [{ title, description, content_type, youtube_link, file_url }],
         title,
         description,
         content_type,
@@ -166,7 +160,15 @@ const AdminPanel = () => {
     ]);
     if (!error) {
       alert('নতুন কনটেন্ট যোগ হয়েছে!');
-      reset();
+      reset({
+        grade_id: undefined,
+        subject_id: undefined,
+        title: '',
+        description: '',
+        content_type: 'youtube',
+        youtube_link: '',
+        file_url: '',
+      });
       const { data } = await supabase.from('contents').select('*').order('created_at', { ascending: false });
       setContents(data || []);
     }
@@ -180,9 +182,6 @@ const AdminPanel = () => {
       setContents(contents.filter(c => c.id !== id));
     }
   };
-
-  // errors.pages টাইপ-সেফলি অ্যাক্সেস
-  const pageErrors = (Array.isArray(errors.pages) ? errors.pages : []) as FieldErrors<PageForm>[];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -317,41 +316,6 @@ const AdminPanel = () => {
                   ))}
                 </select>
                 <Button type="button" size="icon" variant="outline" onClick={() => { setModalGradeId(selectedGradeId); setShowSubjectModal(true); }} disabled={!selectedGradeId}><Plus className="w-4 h-4" /></Button>
-              </div>
-              {/* Pages Section */}
-              <div className="col-span-2">
-                <h4 className="font-bold mb-2 mt-4">Pages</h4>
-                {fields.length === 0 ? (
-                  <div className="text-center text-gray-500 mb-4">No pages added yet.</div>
-                ) : (
-                  <>
-                    {fields.map((field, idx) => (
-                      <div key={field.id} className="border border-gray-200 rounded p-4 mb-4 bg-gray-50">
-                        <div className="mb-2 flex justify-between items-center">
-                          <span className="font-semibold">Page {idx + 1}</span>
-                          {fields.length > 1 && (
-                            <Button type="button" variant="destructive" size="sm" onClick={() => remove(idx)}>Remove</Button>
-                          )}
-                        </div>
-                        <input className="border border-gray-300 p-2 rounded w-full mb-2 focus:ring-2 focus:ring-blue-200" placeholder="Title" {...register(`pages.${idx}.title` as `pages.${number}.title`)} />
-                        {pageErrors && pageErrors[idx]?.title?.message && <div className="text-red-500 text-xs mt-1">{pageErrors[idx]?.title?.message}</div>}
-                        <textarea className="border border-gray-300 p-2 rounded w-full mb-2 resize-none overflow-hidden focus:ring-2 focus:ring-blue-200" placeholder="Description" {...register(`pages.${idx}.description` as `pages.${number}.description`)} rows={2}
-                          onInput={e => { const target = e.target as HTMLTextAreaElement; target.style.height = 'auto'; target.style.height = target.scrollHeight + 'px'; }}
-                        />
-                        {pageErrors && pageErrors[idx]?.description?.message && <div className="text-red-500 text-xs mt-1">{pageErrors[idx]?.description?.message}</div>}
-                        <select className="border border-gray-300 p-2 rounded w-full mb-2 focus:ring-2 focus:ring-blue-200" {...register(`pages.${idx}.content_type` as `pages.${number}.content_type`)}>
-                          <option value="youtube">YouTube</option>
-                          <option value="image">Image</option>
-                          <option value="video">Video</option>
-                        </select>
-                        <input className="border border-gray-300 p-2 rounded w-full mb-2 focus:ring-2 focus:ring-blue-200" placeholder="YouTube Link" {...register(`pages.${idx}.youtube_link` as `pages.${number}.youtube_link`)} />
-                        <input className="border border-gray-300 p-2 rounded w-full mb-2 focus:ring-2 focus:ring-blue-200" placeholder="File URL" {...register(`pages.${idx}.file_url` as `pages.${number}.file_url`)} />
-                      </div>
-                    ))}
-                  </>
-                )}
-                <Button type="button" className="w-full mt-2 py-6 text-lg font-bold" onClick={() => append({ title: '', description: '', content_type: 'youtube', youtube_link: '', file_url: '' })}>+ Add Page</Button>
-                {errors.pages && <div className="text-red-500 text-xs mt-1">{errors.pages.message as string}</div>}
               </div>
               <div className="col-span-2 mt-4">
                 <Button type="submit" className="bg-blue-600 text-white w-full py-3 text-lg font-bold rounded-lg shadow hover:bg-blue-700 transition">Add Content</Button>

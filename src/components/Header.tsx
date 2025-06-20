@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Menu, X, Star, Trophy, User, Home, BookOpen, BarChart3, Brain, GraduationCap, Users } from 'lucide-react';
+import { Menu, X, Star, Trophy, User, Home, BookOpen, BarChart3, Brain, GraduationCap, Users, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
@@ -152,6 +152,15 @@ const Header = () => {
               <Users className="w-4 h-4" />
               <span>Teams</span>
             </Link>
+
+            {/* Admin Panel Button */}
+            <Link
+              to="/admin"
+              className="text-lg font-semibold transition-all duration-300 hover:scale-105 animate-fade-in flex items-center space-x-1 px-3 py-2 rounded-lg text-red-700 hover:text-white hover:bg-red-500/80 bg-red-100 border border-red-200"
+            >
+              <Settings className="w-4 h-4" />
+              <span>Admin Panel</span>
+            </Link>
           </nav>
 
           {/* User Actions - Desktop */}
@@ -281,6 +290,16 @@ const Header = () => {
                   Profile
                 </Button>
               </div>
+
+              {/* Admin Panel Button (Mobile) */}
+              <Link
+                to="/admin"
+                onClick={() => setIsMenuOpen(false)}
+                className="flex items-center space-x-3 px-4 py-3 rounded-lg text-lg font-semibold text-red-700 hover:text-white hover:bg-red-500/80 bg-red-100 border border-red-200 mt-2"
+              >
+                <Settings className="w-5 h-5" />
+                <span>Admin Panel</span>
+              </Link>
             </nav>
           </div>
         )}
