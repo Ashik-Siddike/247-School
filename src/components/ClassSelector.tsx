@@ -1,26 +1,33 @@
-
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { GraduationCap, Sparkles, Star, Trophy } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 
 const ClassSelector = () => {
   const navigate = useNavigate();
 
-  const standards = [
-    { value: '1st', label: '1st', age: '6-7 years', color: 'bg-gradient-to-br from-red-200 via-red-300 to-pink-300', border: 'border-red-300', hover: 'hover:from-red-300 hover:to-pink-400', emoji: '🌟' },
-    { value: '2nd', label: '2nd', age: '7-8 years', color: 'bg-gradient-to-br from-orange-200 via-orange-300 to-yellow-300', border: 'border-orange-300', hover: 'hover:from-orange-300 hover:to-yellow-400', emoji: '🎨' },
-    { value: '3rd', label: '3rd', age: '8-9 years', color: 'bg-gradient-to-br from-yellow-200 via-yellow-300 to-amber-300', border: 'border-yellow-300', hover: 'hover:from-yellow-300 hover:to-amber-400', emoji: '🚀' },
-    { value: '4th', label: '4th', age: '9-10 years', color: 'bg-gradient-to-br from-green-200 via-green-300 to-emerald-300', border: 'border-green-300', hover: 'hover:from-green-300 hover:to-emerald-400', emoji: '📚' },
-    { value: '5th', label: '5th', age: '10-11 years', color: 'bg-gradient-to-br from-blue-200 via-blue-300 to-sky-300', border: 'border-blue-300', hover: 'hover:from-blue-300 hover:to-sky-400', emoji: '🔬' },
-    { value: '6th', label: '6th', age: '11-12 years', color: 'bg-gradient-to-br from-indigo-200 via-indigo-300 to-purple-300', border: 'border-indigo-300', hover: 'hover:from-indigo-300 hover:to-purple-400', emoji: '🎯' },
-    { value: '7th', label: '7th', age: '12-13 years', color: 'bg-gradient-to-br from-purple-200 via-purple-300 to-violet-300', border: 'border-purple-300', hover: 'hover:from-purple-300 hover:to-violet-400', emoji: '🧠' },
-    { value: '8th', label: '8th', age: '13-14 years', color: 'bg-gradient-to-br from-pink-200 via-pink-300 to-rose-300', border: 'border-pink-300', hover: 'hover:from-pink-300 hover:to-rose-400', emoji: '💡' },
-    { value: '9th', label: '9th', age: '14-15 years', color: 'bg-gradient-to-br from-teal-200 via-teal-300 to-cyan-300', border: 'border-teal-300', hover: 'hover:from-teal-300 hover:to-cyan-400', emoji: '🏆' },
-    { value: '10th', label: '10th', age: '15-16 years', color: 'bg-gradient-to-br from-cyan-200 via-cyan-300 to-blue-300', border: 'border-cyan-300', hover: 'hover:from-cyan-300 hover:to-blue-400', emoji: '🎓' },
-  ];
+  // ডাইনামিক grades
+  const [grades, setGrades] = useState<{ id: number; name: string }[]>([]);
+  const [loadingGrades, setLoadingGrades] = useState(true);
 
-  const handleGradeSelect = (gradeValue: string) => {
-    navigate(`/class/${gradeValue}`);
+  useEffect(() => {
+    const fetchGrades = async () => {
+      setLoadingGrades(true);
+      const { data, error } = await supabase
+        .from('grades')
+        .select('id, name')
+        .order('id', { ascending: true });
+      if (!error && data) {
+        setGrades(data);
+      }
+      setLoadingGrades(false);
+    };
+    fetchGrades();
+  }, []);
+
+  const handleGradeSelect = (gradeName: string) => {
+    navigate(`/class/${gradeName.replace(/ /g, '-').toLowerCase()}`);
   };
 
   return (
@@ -53,60 +60,67 @@ const ClassSelector = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 lg:gap-8 max-w-7xl mx-auto mb-16">
-          {standards.map((standard, index) => (
-            <div 
-              key={standard.value} 
-              className={`grade-${standard.value.replace('st', '').replace('nd', '').replace('rd', '').replace('th', '')}`}
-            >
-              <Card
-                className={`${standard.color} ${standard.border} ${standard.hover} border-3 cursor-pointer transition-all duration-500 hover:scale-110 hover:shadow-2xl hover:shadow-purple-200/50 animate-fade-in transform hover:-translate-y-2 group relative overflow-hidden`}
-                style={{ animationDelay: `${index * 120}ms` }}
-                onClick={() => handleGradeSelect(standard.value)}
-                role="button"
-                tabIndex={0}
-                aria-label={`Select ${standard.label} Grade for students aged ${standard.age}`}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    handleGradeSelect(standard.value);
-                  }
-                }}
-              >
-                {/* Shine effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-                
-                <CardContent className="p-6 text-center relative z-10">
-                  <div className="text-4xl mb-3 animate-bounce-gentle group-hover:animate-wiggle">
-                    {standard.emoji}
-                  </div>
-                  
-                  <div className="w-14 h-14 bg-white/90 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
-                    <GraduationCap className="w-7 h-7 text-gray-700 group-hover:text-purple-600 transition-colors duration-300" />
-                  </div>
-                  
-                  <h3 className="text-2xl lg:text-3xl font-bold text-gray-800 mb-2 group-hover:text-purple-700 transition-colors duration-300">
-                    Grade {standard.label}
-                  </h3>
-                  <p className="text-sm text-gray-600 font-medium mb-3 group-hover:text-gray-700 transition-colors duration-300">
-                    {standard.age}
-                  </p>
-                  
-                  <div className="flex justify-center items-center space-x-1">
-                    <Star className="w-3 h-3 text-yellow-500 animate-pulse" />
-                    <Star className="w-3 h-3 text-yellow-500 animate-pulse" style={{ animationDelay: '0.2s' }} />
-                    <Star className="w-3 h-3 text-yellow-500 animate-pulse" style={{ animationDelay: '0.4s' }} />
-                  </div>
-                  
-                  <div className="mt-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <span className="text-xs bg-white/80 px-3 py-1 rounded-full text-purple-700 font-semibold shadow-md">
-                      Click to Explore!
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          ))}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 max-w-5xl mx-auto mb-16">
+          {loadingGrades ? (
+            <div className="col-span-full text-center text-gray-400 text-lg py-8">লোড হচ্ছে...</div>
+          ) : grades.length === 0 ? (
+            <div className="col-span-full text-center text-gray-400 text-lg py-8">কোনো ক্লাস পাওয়া যায়নি</div>
+          ) : (
+            grades.map((grade, index) => {
+              // সুন্দর গ্রেডিয়েন্ট কালার সেট
+              const colorSets = [
+                'from-pink-200 via-purple-200 to-blue-200 border-pink-300 hover:from-pink-300 hover:to-blue-300',
+                'from-yellow-200 via-green-200 to-teal-200 border-yellow-300 hover:from-yellow-300 hover:to-teal-300',
+                'from-blue-200 via-cyan-200 to-indigo-200 border-blue-300 hover:from-blue-300 hover:to-indigo-300',
+                'from-rose-200 via-orange-100 to-yellow-100 border-rose-300 hover:from-rose-300 hover:to-yellow-200',
+                'from-green-200 via-lime-100 to-emerald-100 border-green-300 hover:from-green-300 hover:to-emerald-200',
+                'from-purple-200 via-fuchsia-100 to-pink-100 border-purple-300 hover:from-purple-300 hover:to-pink-200',
+              ];
+              const color = colorSets[index % colorSets.length];
+              return (
+                <div key={grade.id} className={`grade-${grade.id}`}>
+                  <Card
+                    className={`bg-gradient-to-br ${color} border-2 cursor-pointer transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-purple-200/40 animate-fade-in transform hover:-translate-y-2 group relative overflow-hidden`}
+                    style={{ animationDelay: `${index * 120}ms` }}
+                    onClick={() => handleGradeSelect(grade.name)}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Select ${grade.name}`}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handleGradeSelect(grade.name);
+                      }
+                    }}
+                  >
+                    {/* Shine effect */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                    <CardContent className="p-6 text-center relative z-10">
+                      <div className="text-4xl mb-3 animate-bounce-gentle group-hover:animate-wiggle">
+                        🎓
+                      </div>
+                      <div className="w-14 h-14 bg-white/90 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
+                        <GraduationCap className="w-7 h-7 text-gray-700 group-hover:text-purple-600 transition-colors duration-300" />
+                      </div>
+                      <h3 className="text-2xl lg:text-3xl font-bold text-gray-800 mb-2 group-hover:text-purple-700 transition-colors duration-300">
+                        {grade.name}
+                      </h3>
+                      <div className="flex justify-center items-center space-x-1 mb-3">
+                        <Star className="w-3 h-3 text-yellow-500 animate-pulse" />
+                        <Star className="w-3 h-3 text-yellow-500 animate-pulse" style={{ animationDelay: '0.2s' }} />
+                        <Star className="w-3 h-3 text-yellow-500 animate-pulse" style={{ animationDelay: '0.4s' }} />
+                      </div>
+                      <div className="mt-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <span className="text-xs bg-white/80 px-3 py-1 rounded-full text-purple-700 font-semibold shadow-md">
+                          Click to Explore!
+                        </span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              );
+            })
+          )}
         </div>
 
         <div className="text-center">

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, Trash2, ArrowLeft, Settings } from 'lucide-react';
+import { Plus, Trash2, ArrowLeft, Settings, Pencil, ChevronDown, ChevronUp } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -20,6 +20,7 @@ const pageSchema = z.object({
 const contentSchema = z.object({
   grade_id: z.number({ required_error: 'ক্লাস নির্বাচন করুন' }),
   subject_id: z.number({ required_error: 'বিষয় নির্বাচন করুন' }),
+  chapter_id: z.number({ required_error: 'চ্যাপ্টার নির্বাচন করুন' }),
   title: z.string().min(1, 'শিরোনাম দিন'),
   description: z.string().min(1, 'বর্ণনা দিন'),
   content_type: z.enum(['youtube', 'image', 'video']),
@@ -52,6 +53,17 @@ const AdminPanel = () => {
   const [newGrade, setNewGrade] = useState('');
   const [newSubject, setNewSubject] = useState('');
   const [modalGradeId, setModalGradeId] = useState<number | null>(null);
+  // Edit state
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [chapters, setChapters] = useState<any[]>([]);
+  const [filteredChapters, setFilteredChapters] = useState<any[]>([]);
+  const [showChapterModal, setShowChapterModal] = useState(false);
+  const [newChapter, setNewChapter] = useState('');
+  const [modalChapterGradeId, setModalChapterGradeId] = useState<number | null>(null);
+  const [modalChapterSubjectId, setModalChapterSubjectId] = useState<number | null>(null);
+  // Accordion state
+  const [openGradeId, setOpenGradeId] = useState<number | null>(null);
+  const [openSubjectId, setOpenSubjectId] = useState<number | null>(null);
 
   // React Hook Form
   const methods = useForm<ContentForm>({
@@ -59,6 +71,7 @@ const AdminPanel = () => {
     defaultValues: {
       grade_id: undefined,
       subject_id: undefined,
+      chapter_id: undefined,
       title: '',
       description: '',
       content_type: 'youtube',
@@ -105,6 +118,27 @@ const AdminPanel = () => {
     }
   }, [selectedGradeId, subjects, setValue]);
 
+  // Fetch chapters
+  useEffect(() => {
+    const fetchChapters = async () => {
+      const { data } = await supabase.from('chapters').select('*');
+      setChapters(data || []);
+    };
+    fetchChapters();
+  }, []);
+
+  // Filter chapters by selected grade & subject
+  const selectedSubjectId = watch('subject_id');
+  useEffect(() => {
+    if (selectedGradeId && selectedSubjectId) {
+      setFilteredChapters(chapters.filter(c => c.grade_id === selectedGradeId && c.subject_id === selectedSubjectId));
+      setValue('chapter_id', undefined);
+    } else {
+      setFilteredChapters([]);
+      setValue('chapter_id', undefined);
+    }
+  }, [selectedGradeId, selectedSubjectId, chapters, setValue]);
+
   // Refresh grades/subjects after add
   const refreshGrades = async () => {
     const { data } = await supabase.from('grades').select('*').order('name');
@@ -113,6 +147,10 @@ const AdminPanel = () => {
   const refreshSubjects = async () => {
     const { data } = await supabase.from('subjects').select('*');
     setSubjects(data || []);
+  };
+  const refreshChapters = async () => {
+    const { data } = await supabase.from('chapters').select('*');
+    setChapters(data || []);
   };
 
   // Add new grade
@@ -139,10 +177,88 @@ const AdminPanel = () => {
     const { data } = await supabase.from('subjects').select('*').eq('name', newSubject.trim()).eq('grade_id', modalGradeId).single();
     if (data) setValue('subject_id', data.id);
   };
+  // Add new chapter
+  const handleAddChapter = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newChapter.trim() || !modalChapterGradeId || !modalChapterSubjectId) return;
+    await supabase.from('chapters').insert({ name: newChapter.trim(), grade_id: modalChapterGradeId, subject_id: modalChapterSubjectId });
+    setNewChapter('');
+    setShowChapterModal(false);
+    await refreshChapters();
+    // নতুন চ্যাপ্টার সিলেক্ট করুন
+    const { data } = await supabase.from('chapters').select('*').eq('name', newChapter.trim()).eq('grade_id', modalChapterGradeId).eq('subject_id', modalChapterSubjectId).single();
+    if (data) setValue('chapter_id', data.id);
+  };
+
+  // Edit বাটনে ক্লিক করলে ফর্মে ডাটা সেট
+  const handleEditContent = async (content: any) => {
+    setEditingId(content.id);
+    // grade_id, subject_id, chapter_id বের করতে হবে
+    const grade = grades.find(g => g.name === content.class) || grades[0];
+    const subject = subjects.find(s => s.name.toLowerCase() === content.subject?.toLowerCase() && s.grade_id === grade?.id);
+    // প্রথমে grade_id, subject_id সেট করুন
+    methods.reset({
+      grade_id: grade?.id,
+      subject_id: subject?.id,
+      chapter_id: undefined, // পরে সেট করবো
+      title: content.title,
+      description: content.description,
+      content_type: content.content_type,
+      youtube_link: content.youtube_link || '',
+      file_url: content.file_url || '',
+    });
+    // filteredSubjects/filteredChapters আপডেট হওয়ার জন্য একটু delay দিন
+    setTimeout(() => {
+      const chapter = chapters.find(c => c.id === content.chapter_id);
+      methods.setValue('chapter_id', chapter?.id);
+    }, 100);
+  };
+
+  // Update content
+  const handleUpdateContent = async (values: ContentForm) => {
+    if (!editingId) return;
+    const { grade_id, subject_id, chapter_id, title, description, content_type, youtube_link, file_url } = values;
+    console.log('Update values:', values);
+    const gradeName = grades.find(g => g.id === grade_id)?.name || '';
+    const subjectName = (filteredSubjects.find(s => s.id === subject_id)?.name || '').toLowerCase();
+    const classValue = classMap[gradeName] || gradeName;
+    const updateObj = {
+      class: classValue,
+      subject: subjectName,
+      chapter_id,
+      pages: [{ title, description, content_type, youtube_link, file_url }],
+      title,
+      description,
+      content_type,
+      youtube_link,
+      file_url
+    };
+    console.log('Update object:', updateObj);
+    const { error } = await supabase.from('contents').update(updateObj).eq('id', editingId);
+    if (error) {
+      alert('Update error: ' + error.message);
+      console.error('Supabase update error:', error);
+      return;
+    }
+    alert('কনটেন্ট আপডেট হয়েছে!');
+    setEditingId(null);
+    reset({
+      grade_id: undefined,
+      subject_id: undefined,
+      chapter_id: undefined,
+      title: '',
+      description: '',
+      content_type: 'youtube',
+      youtube_link: '',
+      file_url: '',
+    });
+    const { data } = await supabase.from('contents').select('*').order('created_at', { ascending: false });
+    setContents(data || []);
+  };
 
   // Add content
   const onSubmit = async (values: ContentForm) => {
-    const { grade_id, subject_id, title, description, content_type, youtube_link, file_url } = values;
+    const { grade_id, subject_id, chapter_id, title, description, content_type, youtube_link, file_url } = values;
     const gradeName = grades.find(g => g.id === grade_id)?.name || '';
     const subjectName = (filteredSubjects.find(s => s.id === subject_id)?.name || '').toLowerCase();
     const classValue = classMap[gradeName] || gradeName;
@@ -150,6 +266,7 @@ const AdminPanel = () => {
       {
         class: classValue,
         subject: subjectName,
+        chapter_id,
         pages: [{ title, description, content_type, youtube_link, file_url }],
         title,
         description,
@@ -163,6 +280,7 @@ const AdminPanel = () => {
       reset({
         grade_id: undefined,
         subject_id: undefined,
+        chapter_id: undefined,
         title: '',
         description: '',
         content_type: 'youtube',
@@ -182,6 +300,51 @@ const AdminPanel = () => {
       setContents(contents.filter(c => c.id !== id));
     }
   };
+
+  // Delete handlers
+  const handleDeleteGrade = async (id: number) => {
+    if (!window.confirm('আপনি কি নিশ্চিতভাবে এই Grade ডিলিট করতে চান? এর সাথে সংশ্লিষ্ট সব Subject, Chapter, Content ডিলিট হবে!')) return;
+    await supabase.from('grades').delete().eq('id', id);
+    setGrades(grades.filter(g => g.id !== id));
+    // Subjects, chapters, contents রিফ্রেশ করুন
+    const { data: newSubjects } = await supabase.from('subjects').select('*');
+    setSubjects(newSubjects || []);
+    const { data: newChapters } = await supabase.from('chapters').select('*');
+    setChapters(newChapters || []);
+    const { data: newContents } = await supabase.from('contents').select('*');
+    setContents(newContents || []);
+  };
+  const handleDeleteSubject = async (id: number) => {
+    if (!window.confirm('আপনি কি নিশ্চিতভাবে এই Subject ডিলিট করতে চান? এর সাথে সংশ্লিষ্ট সব Chapter, Content ডিলিট হবে!')) return;
+    await supabase.from('subjects').delete().eq('id', id);
+    setSubjects(subjects.filter(s => s.id !== id));
+    const { data: newChapters } = await supabase.from('chapters').select('*');
+    setChapters(newChapters || []);
+    const { data: newContents } = await supabase.from('contents').select('*');
+    setContents(newContents || []);
+  };
+  const handleDeleteChapter = async (id: number) => {
+    if (!window.confirm('আপনি কি নিশ্চিতভাবে এই Chapter ডিলিট করতে চান? এর সাথে সংশ্লিষ্ট সব Content ডিলিট হবে!')) return;
+    await supabase.from('chapters').delete().eq('id', id);
+    setChapters(chapters.filter(c => c.id !== id));
+    const { data: newContents } = await supabase.from('contents').select('*');
+    setContents(newContents || []);
+  };
+
+  // Nested structure তৈরি
+  const gradesWithSubjectsAndChapters = grades.map(grade => {
+    const gradeSubjects = subjects.filter(s => s.grade_id === grade.id);
+    return {
+      ...grade,
+      subjects: gradeSubjects.map(subject => ({
+        ...subject,
+        chapters: chapters.filter(c => c.grade_id === grade.id && c.subject_id === subject.id).map(chapter => ({
+          ...chapter,
+          contents: contents.filter(content => content.chapter_id === chapter.id),
+        })),
+      })),
+    };
+  });
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -209,45 +372,91 @@ const AdminPanel = () => {
       </header>
 
       <main className="container mx-auto px-4 py-10">
-        {/* Content List */}
+        {/* Structured Content Management */}
         <section className="mb-10">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold">Content Management</h2>
+          <h2 className="text-2xl font-bold mb-6">Content Management</h2>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {gradesWithSubjectsAndChapters.map(grade => (
+              <div key={grade.id} className="bg-white rounded-2xl shadow-xl border border-gray-200 p-6 hover:shadow-2xl transition-all">
+                <div className="flex items-center justify-between mb-2">
+                  <button
+                    className="flex-1 flex items-center text-left text-xl font-bold text-eduplay-purple focus:outline-none"
+                    onClick={() => setOpenGradeId(openGradeId === grade.id ? null : grade.id)}
+                  >
+                    <span>{grade.name}</span>
+                    {openGradeId === grade.id ? <ChevronUp className="w-5 h-5 ml-2" /> : <ChevronDown className="w-5 h-5 ml-2" />}
+                  </button>
+                  <button onClick={() => handleDeleteGrade(grade.id)} className="ml-2 text-red-500 hover:text-red-700 p-2 rounded-full hover:bg-red-50 transition" title="Delete Grade">
+                    <Trash2 className="w-5 h-5" />
+                  </button>
+                </div>
+                {openGradeId === grade.id && (
+                  <div className="pl-2">
+                    {grade.subjects.length === 0 ? (
+                      <div className="text-gray-400 italic py-2">No subjects</div>
+                    ) : (
+                      grade.subjects.map(subject => (
+                        <div key={subject.id} className="mb-2">
+                          <div className="flex items-center justify-between">
+                            <button
+                              className="flex-1 flex items-center text-left text-lg font-semibold text-blue-700 py-1 focus:outline-none"
+                              onClick={() => setOpenSubjectId(openSubjectId === subject.id ? null : subject.id)}
+                            >
+                              <span>{subject.name}</span>
+                              {openSubjectId === subject.id ? <ChevronUp className="w-4 h-4 ml-2" /> : <ChevronDown className="w-4 h-4 ml-2" />}
+                            </button>
+                            <button onClick={() => handleDeleteSubject(subject.id)} className="ml-2 text-red-500 hover:text-red-700 p-2 rounded-full hover:bg-red-50 transition" title="Delete Subject">
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                          {openSubjectId === subject.id && (
+                            <div className="pl-4">
+                              {subject.chapters.length === 0 ? (
+                                <div className="text-gray-400 italic py-1">No chapters</div>
+                              ) : (
+                                <ul className="space-y-1">
+                                  {subject.chapters.map(chapter => (
+                                    <li key={chapter.id} className="bg-blue-50 rounded-lg px-3 py-2 mb-1 shadow-sm">
+                                      <div className="flex items-center justify-between">
+                                        <span className="font-medium text-blue-900">{chapter.name}</span>
+                                        <button onClick={() => handleDeleteChapter(chapter.id)} className="ml-2 text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-50 transition" title="Delete Chapter">
+                                          <Trash2 className="w-4 h-4" />
+                                        </button>
+                                      </div>
+                                      {/* Content List */}
+                                      {chapter.contents.length === 0 ? (
+                                        <div className="text-gray-400 italic py-1 pl-2">No content</div>
+                                      ) : (
+                                        <ul className="pl-2 mt-1 space-y-1">
+                                          {chapter.contents.map(content => (
+                                            <li key={content.id} className="flex items-center justify-between bg-white rounded px-2 py-1 shadow border border-gray-100">
+                                              <span className="text-gray-800 text-sm font-semibold">{content.title}</span>
+                                              <span className="flex gap-1">
+                                                <button onClick={() => handleEditContent(content)} className="text-blue-500 hover:text-blue-700 p-1 rounded-full hover:bg-blue-50 transition" title="Edit">
+                                                  <Pencil className="w-4 h-4" />
+                                                </button>
+                                                <button onClick={() => handleDeleteContent(content.id)} className="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-50 transition" title="Delete">
+                                                  <Trash2 className="w-4 h-4" />
+                                                </button>
+                                              </span>
+                                            </li>
+                                          ))}
+                                        </ul>
+                                      )}
+                                    </li>
+                                  ))}
+                                </ul>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
-          {loading ? (
-            <div className="text-center py-8 text-lg">লোড হচ্ছে...</div>
-          ) : (
-            <div className="bg-white rounded-xl shadow border border-gray-200 overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-100">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Title</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Subject</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Class</th>
-                    <th className="px-4 py-3"></th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {contents.map(content => (
-                    <tr key={content.id} className="hover:bg-gray-50 transition">
-                      <td className="px-4 py-3 font-medium text-gray-900">{content.title}</td>
-                      <td className="px-4 py-3">
-                        <span className="inline-block bg-blue-100 text-blue-700 text-xs font-bold px-3 py-1 rounded-full">{content.subject}</span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className="inline-block bg-purple-100 text-purple-700 text-xs font-bold px-3 py-1 rounded-full">{content.class}</span>
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <button onClick={() => handleDeleteContent(content.id)} className="text-red-500 hover:text-red-700 p-2 rounded-full hover:bg-red-50 transition" title="Delete">
-                          <Trash2 className="w-5 h-5" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
         </section>
 
         {/* Divider */}
@@ -255,9 +464,9 @@ const AdminPanel = () => {
 
         {/* Content Form */}
         <section className="max-w-2xl mx-auto bg-white rounded-xl shadow border border-gray-200 p-8">
-          <h3 className="text-xl font-bold mb-6">নতুন কনটেন্ট যোগ করুন</h3>
+          <h3 className="text-xl font-bold mb-6">{editingId ? 'কনটেন্ট এডিট করুন' : 'নতুন কনটেন্ট যোগ করুন'}</h3>
           <FormProvider {...methods}>
-            <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-2 gap-6">
+            <form onSubmit={handleSubmit(editingId ? handleUpdateContent : onSubmit)} className="grid grid-cols-2 gap-6">
               <div className="col-span-2">
                 <Label htmlFor="title" className="font-semibold mb-1">Title</Label>
                 <input id="title" className="border border-gray-300 p-2 rounded w-full focus:ring-2 focus:ring-blue-200" placeholder="Title" {...register('title')} />
@@ -317,8 +526,22 @@ const AdminPanel = () => {
                 </select>
                 <Button type="button" size="icon" variant="outline" onClick={() => { setModalGradeId(selectedGradeId); setShowSubjectModal(true); }} disabled={!selectedGradeId}><Plus className="w-4 h-4" /></Button>
               </div>
-              <div className="col-span-2 mt-4">
-                <Button type="submit" className="bg-blue-600 text-white w-full py-3 text-lg font-bold rounded-lg shadow hover:bg-blue-700 transition">Add Content</Button>
+              {/* Chapter Dropdown */}
+              <div className="col-span-2 flex items-center gap-2">
+                <Label htmlFor="chapter_id" className="font-semibold mb-1">Chapter</Label>
+                <select id="chapter_id" className="border border-gray-300 p-2 rounded w-full focus:ring-2 focus:ring-blue-200" {...register('chapter_id', { valueAsNumber: true })} disabled={!selectedGradeId || !selectedSubjectId}>
+                  <option value="">চ্যাপ্টার নির্বাচন করুন</option>
+                  {filteredChapters.map(c => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+                <Button type="button" size="icon" variant="outline" onClick={() => { setModalChapterGradeId(selectedGradeId); setModalChapterSubjectId(selectedSubjectId); setShowChapterModal(true); }} disabled={!selectedGradeId || !selectedSubjectId}><Plus className="w-4 h-4" /></Button>
+              </div>
+              <div className="col-span-2 mt-4 flex gap-2">
+                <Button type="submit" className="bg-blue-600 text-white w-full py-3 text-lg font-bold rounded-lg shadow hover:bg-blue-700 transition">{editingId ? 'Update Content' : 'Add Content'}</Button>
+                {editingId && (
+                  <Button type="button" variant="outline" className="w-full py-3 text-lg font-bold rounded-lg" onClick={() => { setEditingId(null); reset({ grade_id: undefined, subject_id: undefined, chapter_id: undefined, title: '', description: '', content_type: 'youtube', youtube_link: '', file_url: '' }); }}>Cancel</Button>
+                )}
               </div>
             </form>
           </FormProvider>
@@ -347,6 +570,19 @@ const AdminPanel = () => {
                 <Button type="submit" className="bg-blue-600 text-white">Add</Button>
               </form>
               <Button variant="ghost" className="mt-4 w-full" onClick={() => setShowSubjectModal(false)}>Cancel</Button>
+            </div>
+          </div>
+        )}
+        {/* Chapter Modal */}
+        {showChapterModal && (
+          <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
+            <div className="bg-white p-8 rounded-xl shadow-lg w-96 border border-gray-200">
+              <h4 className="font-bold mb-4 text-lg">নতুন চ্যাপ্টার যোগ করুন</h4>
+              <form onSubmit={handleAddChapter} className="flex gap-2">
+                <input className="border border-gray-300 p-2 rounded w-full focus:ring-2 focus:ring-blue-200" placeholder="Chapter Name" value={newChapter} onChange={e => setNewChapter(e.target.value)} />
+                <Button type="submit" className="bg-blue-600 text-white">Add</Button>
+              </form>
+              <Button variant="ghost" className="mt-4 w-full" onClick={() => setShowChapterModal(false)}>Cancel</Button>
             </div>
           </div>
         )}

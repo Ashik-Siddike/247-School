@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ArrowRight, Star, Sparkles } from 'lucide-react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { ArrowLeft, ArrowRight, Star, Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
 
 interface PageData {
   title: string;
@@ -13,84 +13,163 @@ interface PageData {
 }
 
 interface ContentData {
+  id: string;
+  title: string;
+  subject: string;
+  class: string;
   pages: PageData[];
 }
 
 const funEmojis = ['🎉', '🌟', '🚀', '✨', '🎈', '🦄', '😺', '🐻', '🐥', '🦋', '🍭', '🍀'];
 
-const ContentPage: React.FC<{ contentId: string }> = ({ contentId }) => {
-  const [content, setContent] = useState<ContentData | null>(null);
+const ContentPage: React.FC = () => {
+  const { contentId } = useParams<{ contentId: string }>();
+  const [allContents, setAllContents] = useState<ContentData[]>([]);
+  const [selectedContentId, setSelectedContentId] = useState<string | null>(null);
+  const [selectedContent, setSelectedContent] = useState<ContentData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [allContents, setAllContents] = useState<any[]>([]);
-  const [currentIdx, setCurrentIdx] = useState<number>(-1);
   const navigate = useNavigate();
   const location = useLocation();
+  const [openChapterId, setOpenChapterId] = useState<string | null>(null);
 
-  // ক্লাস ও সাবজেক্ট URL থেকে বের করি
+  // URL থেকে subject/class বের করি
   const params = new URLSearchParams(location.search);
   const className = params.get('class') || undefined;
   const subject = params.get('subject') || undefined;
 
-  // কনটেন্ট লোড
+  // সব কনটেন্ট লোড
   useEffect(() => {
+    const fetchAll = async () => {
+      setLoading(true);
+      setError(null);
+      const { data, error } = await supabase
+        .from('contents')
+        .select('id, title, subject, class, pages')
+        .order('created_at', { ascending: false });
+      if (error) {
+        setError('ডেটা লোড করা যায়নি');
+        setLoading(false);
+        return;
+      }
+      setAllContents(data || []);
+      setLoading(false);
+    };
+    fetchAll();
+  }, []);
+
+  // প্রথমবার বা contentId চেঞ্জ হলে সেট করুন
+  useEffect(() => {
+    if (contentId) {
+      setSelectedContentId(contentId);
+    } else if (allContents.length > 0) {
+      setSelectedContentId(allContents[0].id);
+    }
+  }, [contentId, allContents]);
+
+  // নির্দিষ্ট কনটেন্ট লোড
+  useEffect(() => {
+    if (!selectedContentId) return;
     const fetchContent = async () => {
       setLoading(true);
       setError(null);
       const { data, error } = await supabase
         .from('contents')
         .select('*')
-        .eq('id', contentId)
+        .eq('id', selectedContentId)
         .single();
       if (error) {
         setError('ডেটা লোড করা যায়নি');
+        setSelectedContent(null);
         setLoading(false);
         return;
       }
-      setContent(data as ContentData);
+      setSelectedContent(data as ContentData);
       setLoading(false);
     };
     fetchContent();
-  }, [contentId]);
+  }, [selectedContentId]);
 
-  // একই ক্লাস ও সাবজেক্টের সব কনটেন্ট লোড
-  useEffect(() => {
-    if (!className || !subject) return;
-    const fetchAll = async () => {
-      const { data } = await supabase
-        .from('contents')
-        .select('id, title')
-        .eq('class', className)
-        .eq('subject', subject)
-        .order('created_at', { ascending: false });
-      setAllContents(data || []);
-    };
-    fetchAll();
-  }, [className, subject]);
+  // Sidebar-এ শুধু সিলেক্টেড subject/class-এর content দেখাবো
+  const filteredContents = allContents.filter(content => {
+    if (subject && className) {
+      return content.subject === subject && content.class === className;
+    } else if (subject) {
+      return content.subject === subject;
+    } else if (className) {
+      return content.class === className;
+    }
+    return true;
+  });
 
-  // কারেন্ট ইনডেক্স বের করি
-  useEffect(() => {
-    if (!allContents.length) return;
-    const idx = allContents.findIndex(c => c.id === contentId);
-    setCurrentIdx(idx);
-  }, [allContents, contentId]);
+  // Chapter অনুযায়ী group (ধরা হচ্ছে subject/class অনুযায়ী filteredContents আসছে)
+  // যদি chapter_id না থাকে, তাহলে title/grouping অনুযায়ী সাজাতে হবে
+  // এখানে ধরলাম: chapter/grouping নেই, তাই সব content-ই একসাথে দেখাচ্ছে
+  // যদি chapter/grouping থাকে, তাহলে নিচের মতো group করা যাবে:
+  // const chapters = [...new Set(filteredContents.map(c => c.chapter))];
+  // এখানে demo: title অনুযায়ী accordion
+
+  // যদি chapter/grouping structure থাকে:
+  // const chapters = [{ id, name, contents: [...] }]
+  // এখানে filteredContents-এ chapter_id, chapter_name ধরে নিচ্ছি
+
+  // Demo: chapter/grouping structure বানানো
+  const chaptersMap: Record<string, { id: string, name: string, contents: ContentData[] }> = {};
+  filteredContents.forEach(content => {
+    // ধরলাম: content.chapter_id, content.chapter_name আছে
+    const chapterId = (content as any).chapter_id || 'no-chapter';
+    const chapterName = (content as any).chapter_name || 'Uncategorized';
+    if (!chaptersMap[chapterId]) {
+      chaptersMap[chapterId] = { id: chapterId, name: chapterName, contents: [] };
+    }
+    chaptersMap[chapterId].contents.push(content);
+  });
+  const chapters = Object.values(chaptersMap);
 
   if (loading) return <div className="flex justify-center items-center h-64 text-3xl animate-bounce">লোড হচ্ছে... 🦄</div>;
   if (error) return <div className="text-red-600 text-center mt-8 text-2xl">{error} 😿</div>;
-  if (!content || !content.pages || content.pages.length === 0) return <div className="text-center mt-8 text-xl">কোনো কনটেন্ট পাওয়া যায়নি 😕</div>;
+  if (!selectedContent || !selectedContent.pages || selectedContent.pages.length === 0) return <div className="text-center mt-8 text-xl">কোনো কনটেন্ট পাওয়া যায়নি 😕</div>;
 
   // এখন শুধু ১টি পেজ
-  const page = content.pages[0];
+  const page = selectedContent.pages[0];
   const emoji = funEmojis[0];
 
-  // আগের/পরের কনটেন্ট আইডি
-  const prevId = currentIdx > 0 ? allContents[currentIdx - 1]?.id : null;
-  const nextId = currentIdx < allContents.length - 1 ? allContents[currentIdx + 1]?.id : null;
-
   return (
-    <main className="min-h-screen bg-gradient-to-br from-pink-100 via-blue-100 to-yellow-100 flex flex-col items-center py-8 px-2">
-      <div className="w-full max-w-4xl mx-auto">
-        {/* Card */}
+    <main className="min-h-screen bg-gradient-to-br from-pink-100 via-blue-100 to-yellow-100 flex flex-col md:flex-row items-start py-8 px-2">
+      {/* Sidebar */}
+      <aside className="w-full md:w-72 bg-white/80 rounded-2xl shadow-lg border border-eduplay-blue/10 mb-8 md:mb-0 md:mr-8 p-4 max-h-[80vh] overflow-y-auto sticky top-8">
+        <h2 className="text-xl font-bold mb-4 text-eduplay-purple text-center">সব চ্যাপ্টার</h2>
+        <ul className="space-y-2">
+          {chapters.map(chapter => (
+            <li key={chapter.id}>
+              <button
+                className="w-full flex items-center justify-between px-4 py-2 rounded-lg font-semibold border border-transparent hover:bg-blue-50 hover:border-blue-200 text-left"
+                onClick={() => setOpenChapterId(openChapterId === chapter.id ? null : chapter.id)}
+              >
+                <span>{chapter.name}</span>
+                {openChapterId === chapter.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              </button>
+              {openChapterId === chapter.id && (
+                <ul className="pl-4 mt-1 space-y-1">
+                  {chapter.contents.map(content => (
+                    <li key={content.id}>
+                      <button
+                        className={`w-full text-left px-3 py-1 rounded transition font-medium border border-transparent hover:bg-blue-100 hover:border-blue-300 flex flex-col ${selectedContentId === content.id ? 'bg-blue-100 border-blue-400 text-eduplay-purple' : ''}`}
+                        onClick={() => setSelectedContentId(content.id)}
+                      >
+                        <span className="text-base">{content.title}</span>
+                        <span className="text-xs text-gray-500">{content.subject} | {content.class}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </li>
+          ))}
+        </ul>
+      </aside>
+      {/* Main Content */}
+      <div className="flex-1 w-full max-w-4xl mx-auto">
         <div className="relative bg-white rounded-3xl shadow-2xl p-4 md:p-12 mb-8 border-4 border-eduplay-purple/20 animate-fade-in">
           {/* Fun emoji confetti */}
           <div className="absolute -top-8 left-4 text-4xl animate-bounce-gentle select-none">{emoji}</div>
@@ -140,27 +219,6 @@ const ContentPage: React.FC<{ contentId: string }> = ({ contentId }) => {
               </video>
             )}
           </section>
-        </div>
-        {/* Navigation */}
-        <div className="flex justify-between items-center gap-4 mt-2">
-          <Button
-            variant="secondary"
-            size="lg"
-            className={`rounded-full px-6 py-3 text-xl font-bold bg-gradient-to-r from-eduplay-blue to-eduplay-purple text-white shadow-lg hover:scale-105 transition-all duration-200 ${!prevId ? 'opacity-50 cursor-not-allowed' : ''}`}
-            onClick={() => prevId && navigate(`/content/${prevId}?class=${className}&subject=${subject}`)}
-            disabled={!prevId}
-          >
-            <ArrowLeft className="w-6 h-6 mr-2" /> আগের কনটেন্ট
-          </Button>
-          <Button
-            variant="secondary"
-            size="lg"
-            className={`rounded-full px-6 py-3 text-xl font-bold bg-gradient-to-r from-eduplay-purple to-eduplay-blue text-white shadow-lg hover:scale-105 transition-all duration-200 ${!nextId ? 'opacity-50 cursor-not-allowed' : ''}`}
-            onClick={() => nextId && navigate(`/content/${nextId}?class=${className}&subject=${subject}`)}
-            disabled={!nextId}
-          >
-            পরের কনটেন্ট <ArrowRight className="w-6 h-6 ml-2" />
-          </Button>
         </div>
       </div>
     </main>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Menu, X, Star, Trophy, User, Home, BookOpen, BarChart3, Brain, GraduationCap, Users, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -8,11 +8,31 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { supabase } from '@/lib/supabaseClient';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+
+  // ডাইনামিক grades
+  const [grades, setGrades] = useState<{ id: number; name: string }[]>([]);
+  const [loadingGrades, setLoadingGrades] = useState(true);
+
+  useEffect(() => {
+    const fetchGrades = async () => {
+      setLoadingGrades(true);
+      const { data, error } = await supabase
+        .from('grades')
+        .select('id, name')
+        .order('id', { ascending: true });
+      if (!error && data) {
+        setGrades(data);
+      }
+      setLoadingGrades(false);
+    };
+    fetchGrades();
+  }, []);
 
   const navItems = [
     { href: "/", label: "Home", icon: Home },
@@ -47,9 +67,10 @@ const Header = () => {
     setIsMenuOpen(false);
   };
 
-  const handleStandardSelect = (standard: string) => {
-    const standardNumber = standard.split(' ')[0];
-    navigate(`/class/${standardNumber}`);
+  const handleStandardSelect = (gradeName: string) => {
+    // gradeName থেকে id বের করা লাগলে grades state ব্যবহার করা যাবে
+    // এখানে ধরে নিচ্ছি name-ই route param
+    navigate(`/class/${gradeName.replace(/ /g, '-').toLowerCase()}`);
   };
 
   return (
@@ -96,23 +117,29 @@ const Header = () => {
                 sideOffset={8}
               >
                 <div className="grid gap-1.5">
-                  {standards.map((standard, index) => (
-                    <DropdownMenuItem
-                      key={standard}
-                      onClick={() => handleStandardSelect(standard)}
-                      className="flex items-center space-x-3 px-3 py-2.5 rounded-lg cursor-pointer transition-all duration-200
-                        hover:bg-gradient-to-r hover:from-eduplay-purple/10 hover:to-eduplay-blue/10
-                        hover:text-eduplay-purple hover:scale-[1.02] active:scale-[0.98]
-                        data-[highlighted]:bg-eduplay-purple/5"
-                    >
-                      <div className="flex items-center justify-center w-7 h-7 rounded-full bg-gradient-to-br from-eduplay-purple/10 to-eduplay-blue/10">
-                        <span className="text-sm font-semibold text-eduplay-purple">
-                          {index + 1}
-                        </span>
-                      </div>
-                      <span className="text-base font-medium">{standard}</span>
-                    </DropdownMenuItem>
-                  ))}
+                  {loadingGrades ? (
+                    <div className="px-3 py-2 text-gray-400">লোড হচ্ছে...</div>
+                  ) : grades.length === 0 ? (
+                    <div className="px-3 py-2 text-gray-400">কোনো ক্লাস নেই</div>
+                  ) : (
+                    grades.map((grade, index) => (
+                      <DropdownMenuItem
+                        key={grade.id}
+                        onClick={() => handleStandardSelect(grade.name)}
+                        className="flex items-center space-x-3 px-3 py-2.5 rounded-lg cursor-pointer transition-all duration-200
+                          hover:bg-gradient-to-r hover:from-eduplay-purple/10 hover:to-eduplay-blue/10
+                          hover:text-eduplay-purple hover:scale-[1.02] active:scale-[0.98]
+                          data-[highlighted]:bg-eduplay-purple/5"
+                      >
+                        <div className="flex items-center justify-center w-7 h-7 rounded-full bg-gradient-to-br from-eduplay-purple/10 to-eduplay-blue/10">
+                          <span className="text-sm font-semibold text-eduplay-purple">
+                            {index + 1}
+                          </span>
+                        </div>
+                        <span className="text-base font-medium">{grade.name}</span>
+                      </DropdownMenuItem>
+                    ))
+                  )}
                 </div>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -217,21 +244,29 @@ const Header = () => {
                   <span>Classes</span>
                 </div>
                 <div className="pl-8 space-y-1">
-                  {standards.slice(0, 5).map((standard) => (
-                    <button
-                      key={standard}
-                      onClick={() => {
-                        handleStandardSelect(standard);
-                        setIsMenuOpen(false);
-                      }}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-600 hover:text-eduplay-purple hover:bg-eduplay-purple/5 rounded"
-                    >
-                      {standard}
+                  {loadingGrades ? (
+                    <div className="px-4 py-2 text-gray-400">লোড হচ্ছে...</div>
+                  ) : grades.length === 0 ? (
+                    <div className="px-4 py-2 text-gray-400">কোনো ক্লাস নেই</div>
+                  ) : (
+                    grades.slice(0, 5).map((grade) => (
+                      <button
+                        key={grade.id}
+                        onClick={() => {
+                          handleStandardSelect(grade.name);
+                          setIsMenuOpen(false);
+                        }}
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-600 hover:text-eduplay-purple hover:bg-eduplay-purple/5 rounded"
+                      >
+                        {grade.name}
+                      </button>
+                    ))
+                  )}
+                  {grades.length > 5 && (
+                    <button className="block w-full text-left px-4 py-2 text-sm text-gray-500">
+                      ... আরও ক্লাস
                     </button>
-                  ))}
-                  <button className="block w-full text-left px-4 py-2 text-sm text-gray-500">
-                    ... and more
-                  </button>
+                  )}
                 </div>
               </div>
 
