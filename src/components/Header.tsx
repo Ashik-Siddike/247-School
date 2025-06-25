@@ -19,6 +19,8 @@ const Header = () => {
   const [grades, setGrades] = useState<{ id: number; name: string }[]>([]);
   const [loadingGrades, setLoadingGrades] = useState(true);
 
+  const [user, setUser] = useState(null);
+
   useEffect(() => {
     const fetchGrades = async () => {
       setLoadingGrades(true);
@@ -32,6 +34,20 @@ const Header = () => {
       setLoadingGrades(false);
     };
     fetchGrades();
+
+    const getUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      setUser(data.user);
+    };
+    getUser();
+
+    // Auth state change listener
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+    return () => {
+      listener?.subscription.unsubscribe();
+    };
   }, []);
 
   const navItems = [
@@ -71,6 +87,12 @@ const Header = () => {
     // gradeName থেকে id বের করা লাগলে grades state ব্যবহার করা যাবে
     // এখানে ধরে নিচ্ছি name-ই route param
     navigate(`/class/${gradeName.replace(/ /g, '-').toLowerCase()}`);
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+    navigate('/');
   };
 
   return (
@@ -196,13 +218,30 @@ const Header = () => {
               <Trophy className="w-5 h-5 text-eduplay-orange mr-2 animate-pulse" />
               <span className="font-bold text-eduplay-orange">1,250 ⭐</span>
             </div>
-            <Button 
-              onClick={handleProfileClick}
-              className="bg-gradient-to-r from-eduplay-green to-eduplay-blue hover:shadow-xl transform hover:scale-105 transition-all duration-300"
-            >
-              <User className="w-5 h-5 mr-2" />
-              Profile
-            </Button>
+            {user ? (
+              <>
+                <Button 
+                  onClick={() => navigate('/profile')}
+                  className="bg-gradient-to-r from-eduplay-green to-eduplay-blue hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+                >
+                  <User className="w-5 h-5 mr-2" />
+                  Profile
+                </Button>
+                <Button
+                  onClick={handleLogout}
+                  className="bg-red-500 hover:bg-red-600 text-white ml-2"
+                >
+                  Logout
+                </Button>
+              </>
+            ) : (
+              <Button
+                onClick={() => navigate('/login')}
+                className="bg-gradient-to-r from-eduplay-purple to-eduplay-blue hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+              >
+                Login
+              </Button>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -317,13 +356,36 @@ const Header = () => {
                   <Trophy className="w-5 h-5 text-eduplay-orange mr-2 animate-wiggle" />
                   <span className="font-bold text-eduplay-orange text-lg">1,250 ⭐</span>
                 </div>
-                <Button 
-                  className="w-full bg-gradient-to-r from-eduplay-green to-eduplay-blue hover:scale-105 transition-all duration-300 py-3"
-                  onClick={handleProfileClick}
-                >
-                  <User className="w-5 h-5 mr-2" />
-                  Profile
-                </Button>
+                {user ? (
+                  <>
+                    <Button 
+                      className="w-full bg-gradient-to-r from-eduplay-green to-eduplay-blue hover:scale-105 transition-all duration-300 py-3"
+                      onClick={() => {
+                        setIsMenuOpen(false);
+                        navigate('/profile');
+                      }}
+                    >
+                      <User className="w-5 h-5 mr-2" />
+                      Profile
+                    </Button>
+                    <Button
+                      className="w-full bg-red-500 hover:bg-red-600 text-white mt-2"
+                      onClick={handleLogout}
+                    >
+                      Logout
+                    </Button>
+                  </>
+                ) : (
+                  <Button
+                    className="w-full bg-gradient-to-r from-eduplay-purple to-eduplay-blue hover:scale-105 transition-all duration-300 py-3"
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      navigate('/login');
+                    }}
+                  >
+                    Login
+                  </Button>
+                )}
               </div>
 
               {/* Admin Panel Button (Mobile) */}

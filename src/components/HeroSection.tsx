@@ -1,10 +1,33 @@
-
 import { Play, Sparkles, BookOpen, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 
 const HeroSection = () => {
   const navigate = useNavigate();
+
+  // ডাইনামিক স্ট্যাটস
+  const [stats, setStats] = useState({
+    students: 0,
+    lessons: 0,
+    subjects: 0,
+  });
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      // তিনটা আলাদা কুয়েরি
+      const { data: studentsData } = await supabase.rpc('count_profiles');
+      const { data: lessonsData } = await supabase.rpc('count_contents');
+      const { data: subjectsData } = await supabase.rpc('count_subjects');
+      setStats({
+        students: studentsData || 0,
+        lessons: lessonsData || 0,
+        subjects: subjectsData || 0,
+      });
+    };
+    fetchStats();
+  }, []);
 
   const handleStartLearning = () => {
     const subjectsSection = document.getElementById('subjects');
@@ -81,16 +104,16 @@ const HeroSection = () => {
             {/* Stats - Mobile Optimized */}
             <div className="grid grid-cols-3 gap-2 lg:gap-4 pt-6 lg:pt-8 animate-fade-in delay-700">
               <div className="text-center p-3 lg:p-4 bg-white/50 rounded-2xl playful-shadow hover:scale-105 transition-all duration-300 animate-float cursor-pointer">
-                <div className="text-lg lg:text-2xl font-bold text-eduplay-purple">50K+</div>
+                <div className="text-lg lg:text-2xl font-bold text-eduplay-purple">{stats.students}+</div>
                 <div className="text-xs lg:text-sm text-gray-600">Happy Students</div>
               </div>
               <div className="text-center p-3 lg:p-4 bg-white/50 rounded-2xl playful-shadow hover:scale-105 transition-all duration-300 animate-bounce-gentle cursor-pointer">
-                <div className="text-lg lg:text-2xl font-bold text-eduplay-green">1000+</div>
+                <div className="text-lg lg:text-2xl font-bold text-eduplay-green">{stats.lessons}+</div>
                 <div className="text-xs lg:text-sm text-gray-600">Fun Lessons</div>
               </div>
               <div className="text-center p-3 lg:p-4 bg-white/50 rounded-2xl playful-shadow hover:scale-105 transition-all duration-300 animate-wiggle cursor-pointer">
-                <div className="text-lg lg:text-2xl font-bold text-eduplay-orange">99%</div>
-                <div className="text-xs lg:text-sm text-gray-600">Love Rate</div>
+                <div className="text-lg lg:text-2xl font-bold text-eduplay-orange">{stats.subjects}</div>
+                <div className="text-xs lg:text-sm text-gray-600">Subjects</div>
               </div>
             </div>
           </div>

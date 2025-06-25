@@ -21,6 +21,7 @@ import AdminPanel from "./pages/AdminPanel";
 import Login from "./pages/Login";
 import ContentPage from "./pages/ContentPage";
 import ContentList from "./pages/ContentList";
+import Profile from "./pages/Profile";
 
 const queryClient = new QueryClient();
 
@@ -46,6 +47,7 @@ const App = () => (
             <Route path="/parent" element={<ParentPanel />} />
             <Route path="/admin" element={<AdminPanel />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/profile" element={<Profile />} />
             <Route path="/content/:id" element={<ContentPageWrapper />} />
             <Route path="/lessons/:subject" element={<SubjectContentListWrapper />} />
             <Route path="*" element={<NotFound />} />
@@ -60,7 +62,7 @@ const App = () => (
 function ContentPageWrapper() {
   const { id } = useParams();
   if (!id) return <div className="text-center mt-8">Content ID পাওয়া যায়নি</div>;
-  return <ContentPage contentId={id} />;
+  return <ContentPage />;
 }
 
 // Wrapper: ডায়নামিক সাবজেক্ট ও ক্লাস অনুযায়ী ContentList দেখাবে

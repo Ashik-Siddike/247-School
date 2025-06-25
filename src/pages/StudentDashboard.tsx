@@ -1,19 +1,75 @@
-
-import { ArrowLeft, BarChart, Star, Trophy, Clock, Target, TrendingUp, Calendar, BookOpen, Award, Brain, Zap, Heart, Users, ChevronRight, Play } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { ArrowLeft, BarChart, Star, Trophy, Clock, Target, TrendingUp, Calendar, BookOpen, Award, Brain, Zap, Heart, Users, ChevronRight, Play, User, Percent, Rocket, Smile } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { supabase } from '../lib/supabaseClient';
+
+const dummyStats = {
+  stars: 1250,
+  badges: 15,
+  hours: 45,
+  accuracy: 89,
+  streak: 7,
+};
+const dummySubjects = [
+  { name: 'Math', progress: 85, lessons: '17/20', score: 93, time: '12h 30m' },
+  { name: 'English', progress: 72, lessons: '13/18', score: 88, time: '9h 45m' },
+  { name: 'BD Bangla', progress: 90, lessons: '18/20', score: 92, time: '11h 20m' },
+  { name: 'Science', progress: 67, lessons: '10/15', score: 83, time: '8h 15m' },
+];
+const dummyAchievements = [
+  { title: 'Math Master', desc: 'Solved by pro-level', points: 100 },
+  { title: 'Bookworm', desc: 'Read 25 stories!', points: 25 },
+  { title: 'Star Collector', desc: 'Earned 1000 stars!', points: 150 },
+  { title: 'Science Explorer', desc: 'Completed 10 experiments!', points: 40 },
+];
+const dummyFriends = [
+  { name: 'Alex', stars: 1500, online: true },
+  { name: 'Maya', stars: 1200, online: false },
+  { name: 'Zara', stars: 1100, online: true },
+];
+const dummyGoals = [
+  { title: 'Complete 10 Science Lessons', progress: 6, total: 10 },
+  { title: 'Read 15 Stories', progress: 13, total: 15 },
+  { title: 'Solve 100 Problems', progress: 78, total: 100 },
+];
+const dummyWeek = [3, 4, 5, 3, 6, 2, 5];
+const dummyWeekTime = ['45m', '30m', '1h', '45m', '75m', '25m', '50m'];
 
 const StudentDashboard = () => {
+  const [user, setUser] = useState(null);
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      const { data } = await supabase.auth.getUser();
+      setUser(data.user);
+      if (!data.user) return;
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', data.user.id)
+        .single();
+      setProfile(profileData);
+      setLoading(false);
+    };
+    fetchUserProfile();
+  }, []);
+
+  if (loading) return <div className="text-center py-20 text-2xl">লোড হচ্ছে...</div>;
+  if (!user || !profile) return <div className="text-center py-20 text-xl">প্রোফাইল ডেটা পাওয়া যায়নি</div>;
+
   const studentData = {
-    name: "Sarah",
-    totalStars: 1250,
-    badges: 15,
-    hoursLearned: 45,
-    accuracy: 89,
-    streak: 7,
+    name: profile.name || 'User',
+    totalStars: dummyStats.stars,
+    badges: dummyStats.badges,
+    hoursLearned: dummyStats.hours,
+    accuracy: dummyStats.accuracy,
+    streak: dummyStats.streak,
     level: "Math Explorer",
     rank: 15,
     totalStudents: 150,
@@ -88,45 +144,39 @@ const StudentDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-eduplay-purple via-eduplay-blue to-eduplay-green text-white py-8">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center mb-6">
-            <Link to="/" className="mr-4">
-              <Button variant="ghost" size="sm" className="text-white hover:bg-white/20">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Home
-              </Button>
-            </Link>
-          </div>
-          
-          <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 p-0 md:p-6">
+      {/* Header & Stats */}
+      <div className="max-w-7xl mx-auto">
+        <div className="rounded-3xl bg-gradient-to-r from-blue-400 via-purple-400 to-green-400 p-8 md:p-12 mb-8 shadow-xl relative overflow-hidden">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
             <div>
-              <h1 className="text-4xl font-bold mb-2">Welcome back, {studentData.name}! 👋</h1>
-              <p className="text-xl opacity-90">Ready for more learning adventures?</p>
-              <div className="flex items-center space-x-4 mt-3">
-                <Badge className="bg-white/20 text-white border-white/30">
-                  <Award className="w-4 h-4 mr-1" />
-                  {studentData.level}
-                </Badge>
-                <Badge className="bg-white/20 text-white border-white/30">
-                  <Users className="w-4 h-4 mr-1" />
-                  Rank #{studentData.rank} of {studentData.totalStudents}
-                </Badge>
+              <div className="flex items-center gap-3 mb-2">
+                <span className="w-12 h-12 rounded-full bg-white/80 border-2 border-purple-200 flex items-center justify-center text-2xl shadow-lg overflow-hidden">
+                  <img
+                    src={profile.avatar_url || 'https://ui-avatars.com/api/?name=' + (profile.name || 'User')}
+                    alt="Profile"
+                    className="w-10 h-10 rounded-full object-cover"
+                  />
+                </span>
+                <div>
+                  <div className="text-lg md:text-2xl font-bold text-white drop-shadow">Welcome back, {profile.name || 'User'}! <span className="animate-wiggle">👋</span></div>
+                  <div className="text-sm text-white/90">{profile.grade ? `Class: ${profile.grade}` : ''}</div>
+                </div>
+              </div>
+              <div className="flex gap-2 mt-2">
+                <span className="bg-white/30 text-white px-3 py-1 rounded-full text-xs font-semibold">{profile.bio || 'Learner'}</span>
+                {profile.address && <span className="bg-white/30 text-white px-3 py-1 rounded-full text-xs font-semibold">{profile.address}</span>}
               </div>
             </div>
-            
-            <div className="text-center bg-white/20 rounded-2xl p-6">
-              <div className="text-3xl font-bold">{studentData.streak}</div>
-              <div className="text-sm opacity-90">Day Streak! 🔥</div>
+            <div className="flex flex-col items-end">
+              <div className="bg-white/80 rounded-2xl px-6 py-4 flex flex-col items-center shadow-lg">
+                <div className="text-3xl font-bold text-green-500">{profile.streak || 0}</div>
+                <div className="text-xs font-semibold text-gray-700">Day Streak <span className="animate-bounce">🔥</span></div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-
-      <div className="container mx-auto px-4 py-8">
-        {/* Quick Stats */}
+        {/* Stats Row */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <Card className="border-0 playful-shadow bg-gradient-to-br from-eduplay-blue/10 to-eduplay-purple/10">
             <CardContent className="p-6 text-center">
@@ -160,9 +210,9 @@ const StudentDashboard = () => {
             </CardContent>
           </Card>
         </div>
-
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* Main Content */}
+        {/* Main Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left: Progress & Activity */}
           <div className="lg:col-span-2 space-y-8">
             {/* Subject Progress */}
             <Card className="border-0 playful-shadow">
@@ -264,9 +314,9 @@ const StudentDashboard = () => {
             </Card>
           </div>
 
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Recent Achievements */}
+          {/* Right: Achievements, Friends, Actions */}
+          <div className="space-y-8">
+            {/* Achievements */}
             <Card className="border-0 playful-shadow">
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">

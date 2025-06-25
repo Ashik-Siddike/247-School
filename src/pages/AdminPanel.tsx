@@ -408,7 +408,7 @@ const AdminPanel = () => {
                             <button onClick={() => handleDeleteSubject(subject.id)} className="ml-2 text-red-500 hover:text-red-700 p-2 rounded-full hover:bg-red-50 transition" title="Delete Subject">
                               <Trash2 className="w-4 h-4" />
                             </button>
-                          </div>
+                </div>
                           {openSubjectId === subject.id && (
                             <div className="pl-4">
                               {subject.chapters.length === 0 ? (
@@ -422,7 +422,7 @@ const AdminPanel = () => {
                                         <button onClick={() => handleDeleteChapter(chapter.id)} className="ml-2 text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-50 transition" title="Delete Chapter">
                                           <Trash2 className="w-4 h-4" />
                                         </button>
-                                      </div>
+                </div>
                                       {/* Content List */}
                                       {chapter.contents.length === 0 ? (
                                         <div className="text-gray-400 italic py-1 pl-2">No content</div>
@@ -447,16 +447,16 @@ const AdminPanel = () => {
                                   ))}
                                 </ul>
                               )}
-                            </div>
+                  </div>
                           )}
                         </div>
                       ))
                     )}
-                  </div>
+                      </div>
                 )}
-              </div>
-            ))}
-          </div>
+                    </div>
+                  ))}
+                </div>
         </section>
 
         {/* Divider */}
@@ -499,11 +499,11 @@ const AdminPanel = () => {
               <div>
                 <Label htmlFor="youtube_link" className="font-semibold mb-1">YouTube Link</Label>
                 <input id="youtube_link" className="border border-gray-300 p-2 rounded w-full focus:ring-2 focus:ring-blue-200" placeholder="YouTube Link" {...register('youtube_link')} />
-              </div>
+          </div>
               <div className="col-span-2">
                 <Label htmlFor="file_url" className="font-semibold mb-1">File URL</Label>
                 <input id="file_url" className="border border-gray-300 p-2 rounded w-full focus:ring-2 focus:ring-blue-200" placeholder="File URL" {...register('file_url')} />
-              </div>
+                    </div>
               {/* Grade Dropdown */}
               <div className="col-span-1 flex items-center gap-2">
                 <Label htmlFor="grade_id" className="font-semibold mb-1">Grade</Label>
@@ -514,7 +514,7 @@ const AdminPanel = () => {
                   ))}
                 </select>
                 <Button type="button" size="icon" variant="outline" onClick={() => setShowGradeModal(true)}><Plus className="w-4 h-4" /></Button>
-              </div>
+                    </div>
               {/* Subject Dropdown */}
               <div className="col-span-1 flex items-center gap-2">
                 <Label htmlFor="subject_id" className="font-semibold mb-1">Subject</Label>
@@ -525,7 +525,7 @@ const AdminPanel = () => {
                   ))}
                 </select>
                 <Button type="button" size="icon" variant="outline" onClick={() => { setModalGradeId(selectedGradeId); setShowSubjectModal(true); }} disabled={!selectedGradeId}><Plus className="w-4 h-4" /></Button>
-              </div>
+                  </div>
               {/* Chapter Dropdown */}
               <div className="col-span-2 flex items-center gap-2">
                 <Label htmlFor="chapter_id" className="font-semibold mb-1">Chapter</Label>
@@ -542,7 +542,7 @@ const AdminPanel = () => {
                 {editingId && (
                   <Button type="button" variant="outline" className="w-full py-3 text-lg font-bold rounded-lg" onClick={() => { setEditingId(null); reset({ grade_id: undefined, subject_id: undefined, chapter_id: undefined, title: '', description: '', content_type: 'youtube', youtube_link: '', file_url: '' }); }}>Cancel</Button>
                 )}
-              </div>
+                </div>
             </form>
           </FormProvider>
         </section>
@@ -557,8 +557,8 @@ const AdminPanel = () => {
                 <Button type="submit" className="bg-blue-600 text-white">Add</Button>
               </form>
               <Button variant="ghost" className="mt-4 w-full" onClick={() => setShowGradeModal(false)}>Cancel</Button>
-            </div>
-          </div>
+                </div>
+                </div>
         )}
         {/* Subject Modal */}
         {showSubjectModal && (
@@ -570,7 +570,7 @@ const AdminPanel = () => {
                 <Button type="submit" className="bg-blue-600 text-white">Add</Button>
               </form>
               <Button variant="ghost" className="mt-4 w-full" onClick={() => setShowSubjectModal(false)}>Cancel</Button>
-            </div>
+                </div>
           </div>
         )}
         {/* Chapter Modal */}
@@ -583,8 +583,8 @@ const AdminPanel = () => {
                 <Button type="submit" className="bg-blue-600 text-white">Add</Button>
               </form>
               <Button variant="ghost" className="mt-4 w-full" onClick={() => setShowChapterModal(false)}>Cancel</Button>
-            </div>
-          </div>
+        </div>
+      </div>
         )}
       </main>
     </div>
